@@ -25,5 +25,5 @@ export const securityMiddleware = (app) => {
   };
   
   app.use(cors(corsOptions));
-  app.options('*', cors(corsOptions));
+  app.options(/.*/, cors(corsOptions));
 };

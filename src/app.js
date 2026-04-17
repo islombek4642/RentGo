@@ -6,6 +6,7 @@ import globalErrorHandler from './middleware/error.middleware.js';
 import { setupSwagger } from './config/swagger.js';
 import routes from './routes/index.js';
 import AppError from './utils/AppError.js';
+import { HTTP_STATUS } from './constants/index.js';
 
 const app = express();
 
@@ -31,8 +32,8 @@ app.use(langMiddleware);
 app.use('/api/v1', routes);
 
 // 3) UNHANDLED ROUTES
-app.all('*', (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+app.all(/.*/, (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, HTTP_STATUS.NOT_FOUND));
 });
 
 // 4) GLOBAL ERROR HANDLING
