@@ -1,0 +1,26 @@
+{
+  "auth": {
+    "registration_success": "Muvaffaqiyatli ro'yxatdan o'tdingiz",
+    "login_success": "Tizimga muvaffaqiyatli kirdingiz",
+    "phone_exists": "Bu telefon raqami allaqachon ro'yxatdan o'tgan",
+    "invalid_credentials": "Telefon raqami yoki parol noto'g'ri",
+    "logged_out": "Tizimdan chiqdingiz"
+  },
+  "car": {
+    "not_found": "Mashina topilmadi",
+    "not_owner": "Siz ushbu mashinaning egasi emassiz",
+    "no_delete_permission": "Sizda ushbu mashinani o'chirish huquqi yo'q"
+  },
+  "booking": {
+    "overlap": "Ushbu sanalar uchun mashina allaqachon band qilingan",
+    "not_available": "Ushbu mashina hozirda band qilish uchun mavjud emas",
+    "success": "Mashina muvaffaqiyatli band qilindi",
+    "not_found": "Band qilingan ma'lumot topilmadi"
+  },
+  "common": {
+    "unauthorized": "Kirishga ruxsat yo'q. Iltimos, tizimga kiring.",
+    "forbidden": "Ruxsat etilmadi",
+    "validation_error": "Ma'lumotlar noto'g'ri kiritilgan",
+    "internal_error": "Serverda xatolik yuz berdi"
+  }
+}

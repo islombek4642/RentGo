@@ -1,0 +1,26 @@
+{
+  "auth": {
+    "registration_success": "Successfully registered",
+    "login_success": "Successfully logged in",
+    "phone_exists": "This phone number is already registered",
+    "invalid_credentials": "Incorrect phone number or password",
+    "logged_out": "Successfully logged out"
+  },
+  "car": {
+    "not_found": "Car not found",
+    "not_owner": "You are not the owner of this car",
+    "no_delete_permission": "You do not have permission to delete this car"
+  },
+  "booking": {
+    "overlap": "The car is already booked for these dates",
+    "not_available": "This car is currently not available for booking",
+    "success": "Car successfully booked",
+    "not_found": "Booking not found"
+  },
+  "common": {
+    "unauthorized": "Unauthorized. Please log in.",
+    "forbidden": "Access denied",
+    "validation_error": "Input data validation error",
+    "internal_error": "Internal server error occurred"
+  }
+}
