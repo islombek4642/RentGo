@@ -18,6 +18,7 @@ const envSchema = joi.object({
   JWT_REFRESH_EXPIRES_IN: joi.string().default('30d'),
   LOG_LEVEL: joi.string().valid('error', 'warn', 'info', 'http', 'debug').default('info'),
   UPLOAD_PATH: joi.string().default('uploads/'),
+  AUTO_DB_INIT: joi.boolean().default(false),
 }).unknown().required();
 
 const { error, value: envVars } = envSchema.validate(process.env);
