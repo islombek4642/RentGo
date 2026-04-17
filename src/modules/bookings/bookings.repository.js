@@ -43,11 +43,8 @@ class BookingRepository {
       `SELECT * FROM bookings 
        WHERE car_id = $1 
        AND status NOT IN ('cancelled')
-       AND (
-         (start_date <= $2 AND end_date >= $2) OR
-         (start_date <= $3 AND end_date >= $3) OR
-         (start_date >= $2 AND end_date <= $3)
-       )`,
+       AND start_date <= $3 
+       AND end_date >= $2`,
       [carId, startDate, endDate]
     );
     return result.rows;

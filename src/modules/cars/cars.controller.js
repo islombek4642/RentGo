@@ -48,10 +48,7 @@ class CarController {
 
   deleteCar = asyncHandler(async (req, res) => {
     await carService.deleteCar(req.params.id, req.user, req.lang);
-    res.status(HTTP_STATUS.NO_CONTENT).json({
-      status: 'success',
-      data: null,
-    });
+    res.sendStatus(HTTP_STATUS.NO_CONTENT);
   });
 }
 

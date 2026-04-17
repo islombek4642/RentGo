@@ -3,6 +3,7 @@
     "registration_success": "Muvaffaqiyatli ro'yxatdan o'tdingiz",
     "login_success": "Tizimga muvaffaqiyatli kirdingiz",
     "phone_exists": "Bu telefon raqami allaqachon ro'yxatdan o'tgan",
+    "user_not_found": "Bunday telefon raqami ro'yxatdan o'tmagan",
     "invalid_credentials": "Telefon raqami yoki parol noto'g'ri",
     "logged_out": "Tizimdan chiqdingiz"
   },
@@ -21,6 +22,7 @@
     "unauthorized": "Kirishga ruxsat yo'q. Iltimos, tizimga kiring.",
     "forbidden": "Ruxsat etilmadi",
     "validation_error": "Ma'lumotlar noto'g'ri kiritilgan",
-    "internal_error": "Serverda xatolik yuz berdi"
+    "internal_error": "Serverda xatolik yuz berdi",
+    "rate_limit": "So'rovlar juda ko'p. Iltimos, bir soatdan so'ng qayta urinib ko'ring."
   }
 }

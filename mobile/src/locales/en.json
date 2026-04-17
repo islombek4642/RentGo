@@ -1,0 +1,101 @@
+{
+  "common": {
+    "error": "Error",
+    "success": "Success",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "retry": "Retry",
+    "retry_message": "Something went wrong. Please check your connection.",
+    "server_error": "Server Error. Please try again later.",
+    "network_error": "Network Error. Check your connection.",
+    "go_home": "Go to Home",
+    "details": "Details",
+    "retry": "Retry",
+    "retry_message": "Something went wrong. Please check your connection.",
+    "error_occurred": "An error occurred"
+  },
+  "nav": {
+    "home": "Home",
+    "bookings": "Bookings",
+    "profile": "Profile"
+  },
+  "auth": {
+    "welcome": "Welcome Back",
+    "welcome_subtitle": "Sign in to continue your journey",
+    "create_account": "Create Account",
+    "register_subtitle": "Join RentGo and start driving",
+    "phone": "Phone Number",
+    "password": "Password",
+    "name": "Full Name",
+    "forgot_password": "Forgot Password?",
+    "sign_in": "Sign In",
+    "sign_up": "Sign Up",
+    "no_account": "Don't have an account? ",
+    "already_account": "Already have an account? ",
+    "terms": "By signing up, you agree to our Terms of Service and Privacy Policy.",
+    "login_failed": "Login Failed",
+    "register_failed": "Registration Failed",
+    "fill_all": "Please fill in all fields",
+    "session_expired": "Session Expired. Please login again.",
+    "logged_out": "Logged out successfully",
+    "login_success": "Welcome back! Login successful.",
+    "register_success": "Account created successfully!"
+  },
+  "home": {
+    "greeting": "Find your",
+    "title": "Perfect car",
+    "all": "All",
+    "empty": "No cars available.",
+    "empty_description": "Try changing the filters or check back later.",
+    "search": "Search cars..."
+  },
+  "car": {
+    "view": "View",
+    "book_now": "Book Now",
+    "specifications": "Specifications",
+    "features": "Features",
+    "description_title": "Description",
+    "seats": "Seats",
+    "fuel": "Fuel",
+    "year": "Year",
+    "per_day": "/day",
+    "insurance": "Full Insurance",
+    "instant": "Instant Confirmation",
+    "not_available": "Car not available",
+    "model": "Model",
+    "description_template": "Experience the luxury and performance of this {{brand}} {{model}}. Perfect for your travels around {{location}}, providing comfort, style, and advanced features for an unforgettable journey."
+  },
+  "booking": {
+    "title": "Booking Details",
+    "dates": "Rental Dates",
+    "start_date": "Start Date (YYYY-MM-DD)",
+    "end_date": "End Date (YYYY-MM-DD)",
+    "price_details": "Price Details",
+    "daily_rate": "Daily Rate",
+    "total_price": "Total Price",
+    "confirm": "Confirm & Request",
+    "success_msg": "Your booking has been confirmed!",
+    "failed_msg": "Failed to create booking. Please try different dates.",
+    "success_title": "Reservation Confirmed!",
+    "success_subtitle": "Your booking request has been submitted successfully.",
+    "insurance_info": "Prices include basic insurance and road tax."
+  },
+  "profile": {
+    "my_bookings": "My Bookings",
+    "sign_out": "Sign Out",
+    "logout_confirm": "Are you sure you want to sign out?",
+    "no_bookings": "No bookings yet",
+    "no_bookings_desc": "Your rental history will appear here.",
+    "language": "Language",
+    "language_changed": "Language updated successfully"
+  },
+  "status": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "cancelled": "Cancelled"
+  }
+}

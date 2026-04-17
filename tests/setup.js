@@ -1,0 +1,81 @@
+import fs from 'fs';
+import path from 'path';
+import pg from 'pg';
+import pool from '../src/config/db.js';
+import { config } from '../src/config/env.js';
+import { logger } from '../src/config/logger.js';
+
+const { Client } = pg;
+
+/**
+ * Ensures the test database exists.
+ */
+const ensureTestDatabaseExists = async () => {
+  const client = new Client({
+    user: config.db.user,
+    password: config.db.password,
+    host: config.db.host,
+    port: config.db.port,
+    database: 'postgres',
+  });
+
+  try {
+    await client.connect();
+    const res = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [config.db.name]);
+    
+    if (res.rowCount === 0) {
+      console.log(`Test database "${config.db.name}" not found. Creating...`);
+      await client.query(`CREATE DATABASE "${config.db.name}"`);
+    }
+  } catch (err) {
+    console.error('Error during test database existence check/creation:', err);
+    throw err;
+  } finally {
+    await client.end();
+  }
+};
+
+/**
+ * Global setup for tests:
+ * 1. Ensures test database exists and has schema.
+ * 2. Truncates all tables before each test suite.
+ */
+beforeAll(async () => {
+  // Ensure we are in test environment
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error('Test setup must be run in NODE_ENV=test');
+  }
+
+  await ensureTestDatabaseExists();
+
+  // Check if tables exist
+  const tableCheck = await pool.query(`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = 'users'
+    );
+  `);
+
+  if (!tableCheck.rows[0].exists) {
+    console.log('Test database tables not found. Initializing schema...');
+    const schemaPath = path.join(process.cwd(), 'database', 'schema.sql');
+    const sql = fs.readFileSync(schemaPath, 'utf8');
+    const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 0);
+    for (const statement of statements) {
+      await pool.query(statement);
+    }
+  }
+});
+
+beforeEach(async () => {
+  // Truncate tables and restart identity to ensure clean slate for every test file
+  await pool.query('TRUNCATE TABLE users, cars, bookings, refresh_tokens RESTART IDENTITY CASCADE');
+});
+
+afterAll(async () => {
+  // Close pool after all tests in the file are done
+  // Wait, Jest setup actually runs for each test file. 
+  // We'll close the pool to prevent handle leaks.
+  await pool.end();
+});

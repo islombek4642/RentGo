@@ -3,6 +3,7 @@
     "registration_success": "Successfully registered",
     "login_success": "Successfully logged in",
     "phone_exists": "This phone number is already registered",
+    "user_not_found": "User with this phone number not found",
     "invalid_credentials": "Incorrect phone number or password",
     "logged_out": "Successfully logged out"
   },
@@ -21,6 +22,7 @@
     "unauthorized": "Unauthorized. Please log in.",
     "forbidden": "Access denied",
     "validation_error": "Input data validation error",
-    "internal_error": "Internal server error occurred"
+    "internal_error": "Internal server error occurred",
+    "rate_limit": "Too many requests. Please try again in an hour."
   }
 }

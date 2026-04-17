@@ -1,0 +1,101 @@
+{
+  "common": {
+    "error": "Xato",
+    "success": "Muvaffaqiyatli",
+    "loading": "Yuklanmoqda...",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "back": "Orqaga",
+    "next": "Keyingisi",
+    "done": "Tayyor",
+    "retry": "Qayta urinish",
+    "retry_message": "Nimadir xato ketdi. Iltimos, aloqani tekshiring.",
+    "server_error": "Server xatosi. Iltimos, keyinroq qayta urining.",
+    "network_error": "Tarmoq xatosi. Aloqani tekshiring.",
+    "go_home": "Asosiyga qaytish",
+    "details": "Batafsil",
+    "retry": "Qayta urinish",
+    "retry_message": "Nimadir xato ketdi. Iltimos, aloqani tekshiring.",
+    "error_occurred": "Xatolik yuz berdi"
+  },
+  "nav": {
+    "home": "Asosiy",
+    "bookings": "Buyurtmalar",
+    "profile": "Profil"
+  },
+  "auth": {
+    "welcome": "Xush Kelibsiz",
+    "welcome_subtitle": "Sayohatni davom ettirish uchun tizimga kiring",
+    "create_account": "Ro'yxatdan o'tish",
+    "register_subtitle": "RentGo-ga qo'shiling va haydashni boshlang",
+    "phone": "Telefon raqami",
+    "password": "Parol",
+    "name": "To'liq ism",
+    "forgot_password": "Parolni unutdingizmi?",
+    "sign_in": "Kirish",
+    "sign_up": "Ro'yxatdan o'tish",
+    "no_account": "Hisobingiz yo'qmi? ",
+    "already_account": "Hisobingiz bormi? ",
+    "terms": "Ro'yxatdan o'tish orqali siz bizning Xizmat ko'rsatish shartlari va Maxfiylik siyosatimizga rozilik bildirasiz.",
+    "login_failed": "Kirishda xatolik",
+    "register_failed": "Ro'yxatdan o'tishda xatolik",
+    "fill_all": "Iltimos, barcha maydonlarni to'ldiring",
+    "session_expired": "Seans muddati tugadi. Iltimos, qayta kiring.",
+    "logged_out": "Tizimdan muvaffaqiyatli chiqildi",
+    "login_success": "Xush kelibsiz! Tizimga muvaffaqiyatli kirdingiz.",
+    "register_success": "Akkaunt muvaffaqiyatli yaratildi!"
+  },
+  "home": {
+    "greeting": "O'zingizga mos",
+    "title": "Mashinani toping",
+    "all": "Barchasi",
+    "empty": "Avtomobillar topilmadi.",
+    "empty_description": "Filtrlarni o'zgartirib ko'ring yoki keyinroq tekshiring.",
+    "search": "Avtomobillarni qidirish..."
+  },
+  "car": {
+    "view": "Ko'rish",
+    "book_now": "Band qilish",
+    "specifications": "Texnik xususiyatlari",
+    "features": "Qulayliklar",
+    "description_title": "Tavsif",
+    "seats": "O'rindiqlar",
+    "fuel": "Yoqilg'i",
+    "year": "Yili",
+    "per_day": "/kun",
+    "insurance": "To'liq sug'urta",
+    "instant": "Tezkor tasdiqlash",
+    "not_available": "Avtomobil mavjud emas",
+    "model": "Model",
+    "description_template": "Ushbu {{brand}} {{model}} bilan hashamat va unumdorlikni his qiling. {{location}} bo'ylab sayohatlaringiz uchun mos keladi, unutilmas sayohat uchun qulaylik, uslub va ilg'or xususiyatlarni taqdim etadi."
+  },
+  "booking": {
+    "title": "Band qilish tafsilotlari",
+    "dates": "Ijara sanalari",
+    "start_date": "Boshlanish sanasi (YYYY-MM-DD)",
+    "end_date": "Tugash sanasi (YYYY-MM-DD)",
+    "price_details": "Narx tafsilotlari",
+    "daily_rate": "Kunlik narx",
+    "total_price": "Umumiy narx",
+    "confirm": "Tasdiqlash va yuborish",
+    "success_msg": "Band qilish muvaffaqiyatli yakunlandi!",
+    "failed_msg": "Band qilishda xatolik yuz berdi. Boshqa sanalarni sinab ko'ring.",
+    "success_title": "Buyurtma tasdiqlandi!",
+    "success_subtitle": "Sizning buyurtmangiz muvaffaqiyatli qabul qilindi.",
+    "insurance_info": "Narxlar asosiy sug'urta va yo'l solig'ini o'z ichiga oladi."
+  },
+  "profile": {
+    "my_bookings": "Mening buyurtmalarim",
+    "sign_out": "Chiqish",
+    "logout_confirm": "Haqiqatan ham tizimdan chiqmoqchimisiz?",
+    "no_bookings": "Sizda hali buyurtmalar yo'q.",
+    "no_bookings_desc": "Sizning ijara tarixingiz bu yerda ko'rinadi.",
+    "language": "Til",
+    "language_changed": "Til muvaffaqiyatli o'zgartirildi"
+  },
+  "status": {
+    "pending": "Kutilmoqda",
+    "confirmed": "Tasdiqlangan",
+    "cancelled": "Bekor qilingan"
+  }
+}

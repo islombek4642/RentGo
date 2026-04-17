@@ -3,8 +3,8 @@ import { BOOKING_STATUS } from '../../constants/index.js';
 
 export const createBookingSchema = joi.object({
   car_id: joi.string().uuid().required(),
-  start_date: joi.date().iso().required().min('now'),
-  end_date: joi.date().iso().required().min(joi.ref('start_date')),
+  start_date: joi.date().required(),
+  end_date: joi.date().required().greater(joi.ref('start_date')).allow(joi.ref('start_date')),
 });
 
 export const updateBookingStatusSchema = joi.object({

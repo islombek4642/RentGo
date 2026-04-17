@@ -12,6 +12,7 @@ const envSchema = joi.object({
   DB_HOST: joi.string().default('localhost'),
   DB_PORT: joi.number().default(5432),
   DB_NAME: joi.string().required(),
+  DB_TEST_NAME: joi.string().default('rentgo_test'),
   JWT_SECRET: joi.string().required(),
   JWT_REFRESH_SECRET: joi.string().required(),
   JWT_EXPIRES_IN: joi.string().default('15m'),
@@ -36,7 +37,7 @@ export const config = {
     password: envVars.DB_PASSWORD,
     host: envVars.DB_HOST,
     port: envVars.DB_PORT,
-    name: envVars.DB_NAME,
+    name: envVars.NODE_ENV === 'test' ? envVars.DB_TEST_NAME : envVars.DB_NAME,
   },
   jwt: {
     secret: envVars.JWT_SECRET,

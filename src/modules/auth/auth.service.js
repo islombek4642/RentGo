@@ -36,11 +36,18 @@ class AuthService {
   async login(phone, password, lang) {
     // 1) Find user
     const user = await authRepository.findByPhone(phone);
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
+      throw new AppError(t(lang, 'auth.user_not_found'), HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    if (!(await bcrypt.compare(password, user.password))) {
       throw new AppError(t(lang, 'auth.invalid_credentials'), HTTP_STATUS.UNAUTHORIZED);
     }
 
-    // 2) Generate tokens
+    // 2) Revoke all existing refresh tokens for this user (prevent token accumulation)
+    await authRepository.deleteUserRefreshTokens(user.id);
+
+    // 3) Generate new token pair
     const tokens = await this.generateTokens(user.id);
 
     // Don't send password in response
@@ -50,20 +57,25 @@ class AuthService {
   }
 
   async refresh(refreshToken, lang) {
-    // 1) Verify refresh token
-    const decoded = jwt.verify(refreshToken, config.jwt.refreshSecret);
-    
-    // 2) Check if token exists in DB
+    // 1) Verify refresh token signature and expiry
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, config.jwt.refreshSecret);
+    } catch {
+      throw new AppError(t(lang, 'common.unauthorized'), HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    // 2) Check token exists in DB (not yet revoked)
     const tokenInDb = await authRepository.findRefreshToken(refreshToken);
     if (!tokenInDb) {
       throw new AppError(t(lang, 'common.unauthorized'), HTTP_STATUS.UNAUTHORIZED);
     }
 
-    // 3) Generate new tokens
-    const tokens = await this.generateTokens(decoded.id);
-
-    // 4) Delete old refresh token from DB
+    // 3) Delete old token FIRST — prevents duplicate key constraint on re-insert
     await authRepository.deleteRefreshToken(refreshToken);
+
+    // 4) Generate and persist new token pair
+    const tokens = await this.generateTokens(decoded.id);
 
     return tokens;
   }

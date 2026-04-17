@@ -16,6 +16,16 @@ const startServer = async () => {
       logger.info(`Server running in ${config.env} mode on port ${port} 🚀`);
     });
 
+    // Handle server-level errors (e.g. EADDRINUSE)
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        logger.error(`FATAL: Port ${port} is already in use. Is another instance running?`);
+      } else {
+        logger.error('Server error:', err);
+      }
+      process.exit(1);
+    });
+
     // Handle unhandled promise rejections
     process.on('unhandledRejection', (err) => {
       logger.error('UNHANDLED REJECTION! 💥 Shutting down...');
@@ -35,7 +45,7 @@ const startServer = async () => {
 
     process.on('SIGINT', async () => {
       logger.info('SIGINT RECEIVED. Shutting down...');
-      await closeDb();
+      await pool.end();
       server.close(() => {
         process.exit(0);
       });

@@ -1,9 +1,45 @@
 import fs from 'fs';
 import path from 'path';
+import pg from 'pg';
 import pool from './db.js';
 import { logger } from './logger.js';
 import { runSeedData } from '../utils/seed-utils.js';
 import { config } from './env.js';
+
+const { Client } = pg;
+
+/**
+ * Ensures the target database exists.
+ * Connects to 'postgres' database to check and create if necessary.
+ */
+const ensureDatabaseExists = async () => {
+  const client = new Client({
+    user: config.db.user,
+    password: config.db.password,
+    host: config.db.host,
+    port: config.db.port,
+    database: 'postgres', // Connect to default postgres DB
+  });
+
+  try {
+    await client.connect();
+    const res = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [config.db.name]);
+    
+    if (res.rowCount === 0) {
+      logger.info(`Database "${config.db.name}" not found. Creating...`);
+      // CREATE DATABASE cannot be run in a transaction, and pg library handles it fine outside if we use a client
+      await client.query(`CREATE DATABASE "${config.db.name}"`);
+      logger.info(`Database "${config.db.name}" created successfully!`);
+    } else {
+      logger.debug(`Database "${config.db.name}" already exists.`);
+    }
+  } catch (err) {
+    logger.error('Error during database existence check/creation:', err);
+    throw err;
+  } finally {
+    await client.end();
+  }
+};
 
 /**
  * Automatically initializes the database:
@@ -23,6 +59,8 @@ export const setupDatabase = async () => {
   logger.info('Starting automated database initialization...');
 
   try {
+    // 0) Ensure database itself exists
+    await ensureDatabaseExists();
     // 1) Migration Check: Does 'users' table exist?
     const tableCheck = await pool.query(`
       SELECT EXISTS (
