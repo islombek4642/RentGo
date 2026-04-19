@@ -41,7 +41,7 @@ export default function LoginScreen({ navigation }: Props) {
       
       const { user, tokens } = response.data.data;
       setAuth(user, tokens.accessToken, tokens.refreshToken);
-      toast.success(t('common.success'), t('auth.login_success') || 'Welcome back!');
+      toast.success(t('common.success'), t('auth.login_success'));
       
     } catch (error: any) {
       const message = error.response?.data?.message || t('auth.login_failed');

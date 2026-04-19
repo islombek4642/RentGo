@@ -16,7 +16,9 @@
     "details": "Batafsil",
     "retry": "Qayta urinish",
     "retry_message": "Nimadir xato ketdi. Iltimos, aloqani tekshiring.",
-    "error_occurred": "Xatolik yuz berdi"
+    "error_occurred": "Xatolik yuz berdi",
+    "all": "Barchasi",
+    "user": "Foydalanuvchi"
   },
   "nav": {
     "home": "Asosiy",
@@ -67,6 +69,7 @@
     "instant": "Tezkor tasdiqlash",
     "not_available": "Avtomobil mavjud emas",
     "model": "Model",
+    "electric": "Elektr",
     "description_template": "Ushbu {{brand}} {{model}} bilan hashamat va unumdorlikni his qiling. {{location}} bo'ylab sayohatlaringiz uchun mos keladi, unutilmas sayohat uchun qulaylik, uslub va ilg'or xususiyatlarni taqdim etadi."
   },
   "booking": {
@@ -82,7 +85,13 @@
     "failed_msg": "Band qilishda xatolik yuz berdi. Boshqa sanalarni sinab ko'ring.",
     "success_title": "Buyurtma tasdiqlandi!",
     "success_subtitle": "Sizning buyurtmangiz muvaffaqiyatli qabul qilindi.",
-    "insurance_info": "Narxlar asosiy sug'urta va yo'l solig'ini o'z ichiga oladi."
+    "insurance_info": "Narxlar asosiy sug'urta va yo'l solig'ini o'z ichiga oladi.",
+    "pending_title": "Kutilayotgan ziddiyat",
+    "pending_msg": "Tanlangan kunlarning biri yoki bir nechtasi boshqa buyurtma uchun kutilmoqda. Agar ularning buyurtmasi tasdiqlansa, sizniki bekor qilinishi yoki surilishi mumkin.",
+    "conflict_title": "Sanalar band",
+    "conflict_msg": "Ushbu avtomobil allaqachon {{start}} dan {{end}} gacha band qilingan.",
+    "book_from_next": "{{date}} dan boshlab band qilish",
+    "days": "kun"
   },
   "profile": {
     "my_bookings": "Mening buyurtmalarim",

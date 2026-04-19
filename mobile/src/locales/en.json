@@ -16,7 +16,9 @@
     "details": "Details",
     "retry": "Retry",
     "retry_message": "Something went wrong. Please check your connection.",
-    "error_occurred": "An error occurred"
+    "error_occurred": "An error occurred",
+    "all": "All",
+    "user": "User"
   },
   "nav": {
     "home": "Home",
@@ -67,6 +69,7 @@
     "instant": "Instant Confirmation",
     "not_available": "Car not available",
     "model": "Model",
+    "electric": "Electric",
     "description_template": "Experience the luxury and performance of this {{brand}} {{model}}. Perfect for your travels around {{location}}, providing comfort, style, and advanced features for an unforgettable journey."
   },
   "booking": {
@@ -82,7 +85,13 @@
     "failed_msg": "Failed to create booking. Please try different dates.",
     "success_title": "Reservation Confirmed!",
     "success_subtitle": "Your booking request has been submitted successfully.",
-    "insurance_info": "Prices include basic insurance and road tax."
+    "insurance_info": "Prices include basic insurance and road tax.",
+    "pending_title": "Pending Conflict",
+    "pending_msg": "One or more selected days are currently pending another booking. If their booking confirms, yours may be rejected or shifted.",
+    "conflict_title": "Dates Unavailable",
+    "conflict_msg": "This car is already booked from {{start}} to {{end}}.",
+    "book_from_next": "Book from {{date}}",
+    "days": "days"
   },
   "profile": {
     "my_bookings": "My Bookings",

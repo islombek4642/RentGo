@@ -81,7 +81,7 @@ export default function HomeScreen({ navigation }: any) {
         <Search size={20} color={COLORS.gray[400]} />
         <TextInput 
           style={styles.searchInput}
-          placeholder={t('home.search') || 'Search car...'}
+          placeholder={t('home.search')}
           value={tempSearch}
           onChangeText={setTempSearch}
           onSubmitEditing={() => setSearchQuery(tempSearch)}
@@ -114,7 +114,7 @@ export default function HomeScreen({ navigation }: any) {
                   selectedCity === city && styles.selectedTabText
                 ]}
               >
-                {city === 'All' ? t('home.all') : city}
+                {city === 'All' ? t('common.all') : city}
               </Text>
             </TouchableOpacity>
           ))}
@@ -161,7 +161,7 @@ export default function HomeScreen({ navigation }: any) {
             onPress={() => navigation.navigate('CarDetail', { carId: item.id })}
           />
         )}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={renderHeader()}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         initialNumToRender={5}

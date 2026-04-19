@@ -45,7 +45,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       
       const { user, tokens } = response.data.data;
       setAuth(user, tokens.accessToken, tokens.refreshToken);
-      toast.success(t('common.success'), t('auth.register_success') || 'Account created successfully!');
+      toast.success(t('common.success'), t('auth.register_success'));
       
     } catch (error: any) {
       const message = error.response?.data?.message || t('auth.register_failed');

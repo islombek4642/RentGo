@@ -59,7 +59,7 @@ export default function MyBookingsScreen({ navigation }: any) {
   const renderBookingItem = ({ item }: { item: any }) => {
     const status = getStatusConfig(item.status);
     // Data Safety: Fallback for missing brand/model
-    const carName = item.brand && item.model ? `${item.brand} ${item.model}` : t('car.not_available') || 'Car data unavailable';
+    const carName = item.brand && item.model ? `${item.brand} ${item.model}` : t('car.not_available');
 
     const formatDate = (dateStr: string) => {
       if (!dateStr) return '';
@@ -94,7 +94,7 @@ export default function MyBookingsScreen({ navigation }: any) {
             style={styles.detailsButton}
             onPress={() => navigation.navigate('CarDetail', { carId: item.car_id, isReadOnly: true })}
           >
-            <Text style={styles.detailsText}>{t('common.details') || 'Details'}</Text>
+            <Text style={styles.detailsText}>{t('common.details')}</Text>
             <ChevronRight size={16} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
@@ -150,7 +150,7 @@ export default function MyBookingsScreen({ navigation }: any) {
             <EmptyState
               icon={Calendar}
               title={t('profile.no_bookings')}
-              description={t('profile.no_bookings_desc') || 'Your rental history will appear here.'}
+              description={t('profile.no_bookings_desc')}
             />
           )
         }

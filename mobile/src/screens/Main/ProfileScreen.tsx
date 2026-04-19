@@ -29,7 +29,7 @@ const ProfileScreen = () => {
 
   const changeLanguage = (code: string) => {
     i18n.changeLanguage(code);
-    toast.success(t('common.success'), t('profile.language_changed') || 'Language updated');
+    toast.success(t('common.success'), t('profile.language_changed'));
   };
 
   const handleLogout = () => {
@@ -43,7 +43,7 @@ const ProfileScreen = () => {
           style: 'destructive', 
           onPress: () => {
             logout();
-            toast.info(t('auth.logged_out') || 'Logged out successfully');
+            toast.info(t('auth.logged_out'));
           } 
         }
       ]
@@ -61,13 +61,13 @@ const ProfileScreen = () => {
           <View style={styles.avatarContainer}>
             <User size={40} color={COLORS.primary} />
           </View>
-          <Text style={styles.userName}>{user?.name || 'User'}</Text>
+          <Text style={styles.userName}>{user?.name || t('common.user')}</Text>
           <View style={styles.phoneContainer}>
             <Phone size={14} color={COLORS.gray[500]} />
             <Text style={styles.userPhone}>{user?.phone || ''}</Text>
           </View>
           <View style={styles.roleBadge}>
-            <Text style={styles.roleText}>{user?.role || 'User'}</Text>
+            <Text style={styles.roleText}>{user?.role || t('common.user')}</Text>
           </View>
         </View>
 

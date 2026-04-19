@@ -38,14 +38,33 @@ class BookingRepository {
     return result.rows[0];
   }
 
-  async findOverlapping(carId, startDate, endDate) {
-    const result = await pool.query(
-      `SELECT * FROM bookings 
+  async findOverlapping(carId, startDate, endDate, excludeBookingId = null) {
+    let query = `
+       SELECT * FROM bookings 
        WHERE car_id = $1 
-       AND status NOT IN ('cancelled')
+       AND status = 'confirmed'
        AND start_date <= $3 
-       AND end_date >= $2`,
-      [carId, startDate, endDate]
+       AND end_date >= $2
+    `;
+    const params = [carId, startDate, endDate];
+
+    if (excludeBookingId) {
+      params.push(excludeBookingId);
+      query += ` AND id != $${params.length}`;
+    }
+
+    const result = await pool.query(query, params);
+    return result.rows;
+  }
+
+  async findUpcomingBookings(carId, afterDate) {
+    const result = await pool.query(
+      `SELECT start_date, end_date, status FROM bookings 
+       WHERE car_id = $1 
+       AND status IN ('pending', 'confirmed')
+       AND end_date >= $2
+       ORDER BY start_date ASC`,
+      [carId, afterDate]
     );
     return result.rows;
   }

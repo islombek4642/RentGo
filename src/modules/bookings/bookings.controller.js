@@ -37,6 +37,14 @@ class BookingController {
       data: { booking },
     });
   });
+
+  getCarBookedDates = asyncHandler(async (req, res) => {
+    const dates = await bookingService.getCarBookedDates(req.params.carId);
+    res.status(HTTP_STATUS.OK).json({
+      status: 'success',
+      data: { dates },
+    });
+  });
 }
 
 export default new BookingController();

@@ -138,7 +138,7 @@ export default function CarDetailScreen({ route, navigation }: Props) {
                 <Fuel size={20} color={COLORS.primary} />
               </View>
               <Text style={styles.specLabel}>{t('car.fuel')}</Text>
-              <Text style={styles.specValue}>Electric</Text>
+              <Text style={styles.specValue}>{t('car.electric')}</Text>
             </View>
             <View style={styles.specItem}>
               <View style={styles.iconBox}>

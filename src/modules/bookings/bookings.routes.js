@@ -128,6 +128,28 @@ router.get('/my', bookingController.getMyBookings);
 
 /**
  * @swagger
+ * /bookings/car/{carId}:
+ *   get:
+ *     summary: Get upcoming booked dates for a specific car
+ *     description: Returns a list of start and end dates with their pending/confirmed status to build an availability heatmap.
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: carId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Success
+ */
+router.get('/car/:carId', bookingController.getCarBookedDates);
+
+/**
+ * @swagger
  * /bookings/{id}/status:
  *   patch:
  *     summary: Update the status of a booking

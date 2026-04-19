@@ -23,9 +23,9 @@ const BookingSuccessScreen: React.FC<Props> = ({ route, navigation }) => {
           <CheckCircle2 size={80} color={COLORS.success} />
         </View>
 
-        <Text style={styles.title}>{t('booking.success_title') || 'Reservation Confirmed!'}</Text>
+        <Text style={styles.title}>{t('booking.success_title')}</Text>
         <Text style={styles.subtitle}>
-          {t('booking.success_subtitle') || 'Your booking request has been submitted successfully.'}
+          {t('booking.success_subtitle')}
         </Text>
 
         <View style={styles.detailsCard}>
@@ -50,7 +50,7 @@ const BookingSuccessScreen: React.FC<Props> = ({ route, navigation }) => {
           onPress={() => navigation.navigate('Main', { screen: 'Home' })}
         >
           <Home size={20} color={COLORS.white} />
-          <Text style={styles.buttonText}>{t('common.go_home') || 'Go to Home'}</Text>
+          <Text style={styles.buttonText}>{t('common.go_home')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
