@@ -42,7 +42,7 @@ class BookingRepository {
     let query = `
        SELECT * FROM bookings 
        WHERE car_id = $1 
-       AND status = 'confirmed'
+       AND status IN ('pending', 'confirmed')
        AND start_date <= $3 
        AND end_date >= $2
     `;

@@ -20,6 +20,8 @@ const envSchema = joi.object({
   LOG_LEVEL: joi.string().valid('error', 'warn', 'info', 'http', 'debug').default('info'),
   UPLOAD_PATH: joi.string().default('uploads/'),
   AUTO_DB_INIT: joi.boolean().default(false),
+  SEED_ADMIN_PASSWORD: joi.string().default('admin123'),
+  SEED_USER_PASSWORD: joi.string().default('user123'),
 }).unknown().required();
 
 const { error, value: envVars } = envSchema.validate(process.env);
@@ -47,4 +49,8 @@ export const config = {
   },
   logLevel: envVars.LOG_LEVEL,
   uploadPath: envVars.UPLOAD_PATH,
+  seeding: {
+    adminPassword: envVars.SEED_ADMIN_PASSWORD,
+    userPassword: envVars.SEED_USER_PASSWORD,
+  },
 };

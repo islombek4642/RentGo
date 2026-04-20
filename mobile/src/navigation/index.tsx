@@ -38,12 +38,7 @@ export default function RootNavigator() {
             name="BookingConfirm" 
             component={BookingScreen} 
             options={{ 
-              headerShown: true, 
-              title: t('booking.title'),
-              headerBackTitle: t('common.back'),
-              headerTitleAlign: 'center',
-              headerStyle: { backgroundColor: COLORS.white },
-              headerShadowVisible: false,
+              headerShown: false, 
             }} 
           />
           <Stack.Screen 

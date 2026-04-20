@@ -11,7 +11,7 @@ import {
   LayoutAnimation,
   UIManager
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { COLORS, SPACING, TYPOGRAPHY, SIZES } from '../../constants/theme';
@@ -23,15 +23,12 @@ import { toast } from '../../utils/toast';
 import { Calendar } from 'react-native-calendars';
 import { useTranslation } from 'react-i18next';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingConfirm'>;
 
 export default function BookingScreen({ route, navigation }: Props) {
   const { t } = useTranslation();
   const carId = route.params?.carId;
+  const insets = useSafeAreaInsets();
 
   const getTodayStr = () => new Date().toLocaleDateString('en-CA');
 
@@ -231,136 +228,169 @@ export default function BookingScreen({ route, navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {loading ? (
-        <Loader />
-      ) : (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
+    <View style={styles.container}>
+      {/* Custom Fixed Header */}
+      <View style={[styles.screenHeader, { paddingTop: Math.max(insets.top, 20) }]}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.goBack()}
         >
-          <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.summaryCard}>
-            <Text style={styles.cardTitle}>{car.brand} {car.model}</Text>
-            <Text style={styles.cardSubtitle}>{car.location}</Text>
-          </View>
+          <ChevronLeft size={24} color={COLORS.text.primary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t('booking.title')}</Text>
+        <View style={{ width: 40 }} />
+      </View>
 
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <CalendarIcon size={20} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>{t('booking.dates')}</Text>
-            </View>
+      <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+        {loading ? (
+          <Loader />
+        ) : (
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+          >
+            <ScrollView contentContainerStyle={styles.content}>
+              <View style={styles.summaryCard}>
+                <Text style={styles.cardTitle}>{car.brand} {car.model}</Text>
+                <Text style={styles.cardSubtitle}>{car.location}</Text>
+              </View>
 
-            <View style={styles.calendarWrapper}>
-              <Calendar
-                enableSwipeMonths={false}
-                hideArrows={false}
-                markingType={'period'}
-                markedDates={getMarkedDates()}
-                onDayPress={onDayPress}
-                minDate={getTodayStr()}
-                renderHeader={(date) => {
-                  /* Custom Header ensures arrows are always functional and styled correctly */
-                  return (
-                    <View style={styles.customCalendarHeader}>
-                      <Text style={styles.calendarMonthText}>
-                        {date.toString('MMMM yyyy')}
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <CalendarIcon size={20} color={COLORS.primary} />
+                  <Text style={styles.sectionTitle}>{t('booking.dates')}</Text>
+                </View>
+
+                <View style={styles.calendarWrapper}>
+                  <Calendar
+                    enableSwipeMonths={false}
+                    hideArrows={false}
+                    markingType={'period'}
+                    markedDates={getMarkedDates()}
+                    onDayPress={onDayPress}
+                    minDate={getTodayStr()}
+                    renderHeader={(date) => (
+                      <View style={styles.customCalendarHeader}>
+                        <Text style={styles.calendarMonthText}>
+                          {date.toString('MMMM yyyy')}
+                        </Text>
+                      </View>
+                    )}
+                    renderArrow={(direction: 'left' | 'right') => (
+                      direction === 'left' ? 
+                        <ChevronLeft size={24} color={COLORS.primary} /> : 
+                        <ChevronRight size={24} color={COLORS.primary} />
+                    )}
+                    theme={{
+                      todayTextColor: COLORS.primary,
+                      arrowColor: COLORS.primary,
+                      textDayFontSize: 14,
+                      textMonthFontSize: 16,
+                      textDayHeaderFontSize: 14,
+                      textDayFontWeight: '400',
+                      textMonthFontWeight: '700',
+                      textDayHeaderFontWeight: '600',
+                      calendarBackground: COLORS.white,
+                    }}
+                  />
+                </View>
+
+                {hasPendingOverlap && !bookingConflict && (
+                  <View style={[styles.conflictBanner, { backgroundColor: COLORS.warning + '10', borderColor: COLORS.warning + '40' }]}>
+                    <View style={styles.conflictHeader}>
+                      <AlertCircle size={20} color={COLORS.warning} />
+                      <Text style={[styles.conflictTitle, { color: COLORS.warning }]}>
+                        {t('booking.pending_title')}
                       </Text>
                     </View>
-                  );
-                }}
-                renderArrow={(direction: 'left' | 'right') => (
-                  direction === 'left' ? 
-                    <ChevronLeft size={24} color={COLORS.primary} /> : 
-                    <ChevronRight size={24} color={COLORS.primary} />
-                )}
-                theme={{
-                  todayTextColor: COLORS.primary,
-                  arrowColor: COLORS.primary,
-                  textDayFontSize: 14,
-                  textMonthFontSize: 16,
-                  textDayHeaderFontSize: 14,
-                  textDayFontWeight: '400',
-                  textMonthFontWeight: '700',
-                  textDayHeaderFontWeight: '600',
-                  calendarBackground: COLORS.white,
-                }}
-              />
-            </View>
-            {hasPendingOverlap && !bookingConflict && (
-              <View style={[styles.conflictBanner, { backgroundColor: COLORS.warning + '10', borderColor: COLORS.warning + '40' }]}>
-                <View style={styles.conflictHeader}>
-                  <AlertCircle size={20} color={COLORS.warning} />
-                  <Text style={[styles.conflictTitle, { color: COLORS.warning }]}>
-                    {t('booking.pending_title')}
-                  </Text>
-                </View>
-                <Text style={[styles.conflictText, { color: COLORS.warning }]}>
-                  {t('booking.pending_msg')}
-                </Text>
-              </View>
-            )}
-
-            {bookingConflict && (
-              <View style={styles.conflictBanner}>
-                <View style={styles.conflictHeader}>
-                  <AlertCircle size={20} color={COLORS.error} />
-                  <Text style={styles.conflictTitle}>
-                    {t('booking.conflict_title')}
-                  </Text>
-                </View>
-                <Text style={styles.conflictText}>
-                  {t('booking.conflict_msg', { start: bookingConflict.start, end: bookingConflict.end })}
-                </Text>
-                
-                {nextAvailableDate && (
-                  <TouchableOpacity style={styles.smartBookBtn} onPress={handleSmartBook}>
-                    <Text style={styles.smartBookBtnText}>
-                      {t('booking.book_from_next', { date: nextAvailableDate })}
+                    <Text style={[styles.conflictText, { color: COLORS.warning }]}>
+                      {t('booking.pending_msg')}
                     </Text>
-                    <ArrowRight size={16} color={COLORS.white} style={{ marginLeft: 8 }} />
-                  </TouchableOpacity>
+                  </View>
+                )}
+
+                {bookingConflict && (
+                  <View style={styles.conflictBanner}>
+                    <View style={styles.conflictHeader}>
+                      <AlertCircle size={20} color={COLORS.error} />
+                      <Text style={styles.conflictTitle}>
+                        {t('booking.conflict_title')}
+                      </Text>
+                    </View>
+                    <Text style={styles.conflictText}>
+                      {t('booking.conflict_msg', { start: bookingConflict.start, end: bookingConflict.end })}
+                    </Text>
+                    
+                    {nextAvailableDate && (
+                      <TouchableOpacity style={styles.smartBookBtn} onPress={handleSmartBook}>
+                        <Text style={styles.smartBookBtnText}>
+                          {t('booking.book_from_next', { date: nextAvailableDate })}
+                        </Text>
+                        <ArrowRight size={16} color={COLORS.white} style={{ marginLeft: 8 }} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 )}
               </View>
-            )}
-          </View>
 
-          <View style={styles.infoBox}>
-            <Info size={16} color={COLORS.gray[500]} />
-            <Text style={styles.infoText}>
-              {t('booking.insurance_info')}
-            </Text>
-          </View>
+              <View style={styles.infoBox}>
+                <Info size={16} color={COLORS.gray[500]} />
+                <Text style={styles.infoText}>
+                  {t('booking.insurance_info')}
+                </Text>
+              </View>
 
-          <View style={styles.priceBreakdown}>
-            <Text style={styles.sectionTitle}>{t('booking.price_details')}</Text>
-            <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>{t('booking.daily_rate')} x {billingDays} {t('booking.days')}</Text>
-              <Text style={styles.priceValue}>${(parseFloat(car.price_per_day) * billingDays).toLocaleString()}</Text>
-            </View>
-            <View style={[styles.priceRow, styles.totalRow]}>
-              <Text style={styles.totalLabel}>{t('booking.total_price')}</Text>
-              <Text style={styles.totalValue}>${totalPrice.toLocaleString()}</Text>
-            </View>
-          </View>
+              <View style={styles.priceBreakdown}>
+                <Text style={styles.sectionTitle}>{t('booking.price_details')}</Text>
+                <View style={styles.priceRow}>
+                  <Text style={styles.priceLabel}>{t('booking.daily_rate')} x {billingDays} {t('booking.days')}</Text>
+                  <Text style={styles.priceValue}>${(parseFloat(car.price_per_day) * billingDays).toLocaleString()}</Text>
+                </View>
+                <View style={[styles.priceRow, styles.totalRow]}>
+                  <Text style={styles.totalLabel}>{t('booking.total_price')}</Text>
+                  <Text style={styles.totalValue}>${totalPrice.toLocaleString()}</Text>
+                </View>
+              </View>
 
-          <Button
-            title={t('booking.confirm')}
-            onPress={handleBooking}
-            loading={submitting}
-            style={styles.confirmButton}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    )}
-  </SafeAreaView>
-);
+              <Button
+                title={t('booking.confirm')}
+                onPress={handleBooking}
+                loading={submitting}
+                style={styles.confirmButton}
+              />
+            </ScrollView>
+          </KeyboardAvoidingView>
+        )}
+      </SafeAreaView>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  screenHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.sm,
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray[100],
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.text.primary,
   },
   content: {
     padding: SPACING.lg,

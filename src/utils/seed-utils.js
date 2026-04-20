@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { logger } from '../config/logger.js';
+import { config } from '../config/env.js';
 import { ROLES, SYSTEM_CONFIG } from '../constants/index.js';
 
 /**
@@ -11,7 +12,7 @@ export const runSeedData = async (pool) => {
 
   try {
     // 1) Ensure Admin exists
-    const adminPassword = await bcrypt.hash('admin123', SYSTEM_CONFIG.BCRYPT_SALT_ROUNDS);
+    const adminPassword = await bcrypt.hash(config.seeding.adminPassword, SYSTEM_CONFIG.BCRYPT_SALT_ROUNDS);
     await pool.query(
       `INSERT INTO users (name, phone, password, role) 
        VALUES ($1, $2, $3, $4) 
@@ -20,7 +21,7 @@ export const runSeedData = async (pool) => {
     );
 
     // 2) Ensure Regular User exists
-    const userPassword = await bcrypt.hash('user123', SYSTEM_CONFIG.BCRYPT_SALT_ROUNDS);
+    const userPassword = await bcrypt.hash(config.seeding.userPassword, SYSTEM_CONFIG.BCRYPT_SALT_ROUNDS);
     const userResult = await pool.query(
       `INSERT INTO users (name, phone, password, role) 
        VALUES ($1, $2, $3, $4) 
