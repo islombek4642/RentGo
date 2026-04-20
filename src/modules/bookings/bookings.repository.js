@@ -3,7 +3,8 @@ import pool from '../../config/db.js';
 class BookingRepository {
   async findAllByUser(userId) {
     const result = await pool.query(
-      `SELECT b.*, c.brand, c.model 
+      `SELECT b.*, c.brand, c.model, 
+              (SELECT COUNT(*) > 0 FROM reviews r WHERE r.booking_id = b.id AND r.reviewer_id = $1) as has_review
        FROM bookings b 
        JOIN cars c ON b.car_id = c.id 
        WHERE b.user_id = $1 
@@ -65,6 +66,19 @@ class BookingRepository {
        AND end_date >= $2
        ORDER BY start_date ASC`,
       [carId, afterDate]
+    );
+    return result.rows;
+  }
+
+  async findAllByOwner(ownerId) {
+    const result = await pool.query(
+      `SELECT b.*, c.brand, c.model, u.name as renter_name, u.phone as renter_phone
+       FROM bookings b
+       JOIN cars c ON b.car_id = c.id
+       JOIN users u ON b.user_id = u.id
+       WHERE c.owner_id = $1
+       ORDER BY b.created_at DESC`,
+      [ownerId]
     );
     return result.rows;
   }

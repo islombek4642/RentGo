@@ -30,7 +30,8 @@ export default function HomeScreen({ navigation }: any) {
   const [cars, setCars] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
-  const [selectedCity, setSelectedCity] = React.useState('All');
+  const [regions, setRegions] = React.useState<any[]>([]);
+  const [selectedRegionId, setSelectedRegionId] = React.useState<number | 'All'>('All');
   const [hasError, setHasError] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [tempSearch, setTempSearch] = React.useState('');
@@ -41,12 +42,13 @@ export default function HomeScreen({ navigation }: any) {
       // Only show loading skeleton on initial load or refresh, not on filter changes
       if (!isRefresh && !silent) setLoading(true);
       
+      
       let url = '/cars?available=true';
-      if (selectedCity !== 'All') {
-        url += `&location=${selectedCity}`;
+      if (selectedRegionId !== 'All') {
+        url += `&region_id=${selectedRegionId}`;
       }
       if (searchQuery.trim().length > 0) {
-        url += `&brand=${encodeURIComponent(searchQuery.trim())}`;
+        url += `&search=${encodeURIComponent(searchQuery.trim())}`;
       }
 
       const response = await api.get(url);
@@ -58,21 +60,47 @@ export default function HomeScreen({ navigation }: any) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedCity, searchQuery]);
+  }, [selectedRegionId, searchQuery]);
 
   // Initial load only - filters are handled separately
   React.useEffect(() => {
+    fetchRegions();
     fetchCars(false, true);
   }, []);
+
+  const fetchRegions = async () => {
+    try {
+      const response = await api.get('/locations/regions');
+      setRegions(response.data.data.regions);
+    } catch (error) {
+      console.error('Failed to fetch regions:', error);
+    }
+  };
+
+  const getLocalizedName = (item: any) => {
+    const lang = t('common.lang_code') || 'uz';
+    const l = lang === 'ru' ? 'ru' : (lang === 'oz' ? 'oz' : 'uz');
+    return item[`name_${l}`] || item.name_uz;
+  };
+
+  // Handle search debouncing
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearchQuery(tempSearch);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(handler);
+  }, [tempSearch]);
 
   // Handle filter changes silently (without full screen reload)
   React.useEffect(() => {
     // Skip initial render, only update when filters actually change
     fetchCars(false, true);
-  }, [selectedCity, searchQuery]);
+  }, [selectedRegionId, searchQuery]);
 
   const onRefresh = () => {
     setRefreshing(true);
+    fetchRegions();
     fetchCars(true);
   };
 
@@ -92,7 +120,6 @@ export default function HomeScreen({ navigation }: any) {
           placeholder={t('home.search')}
           value={tempSearch}
           onChangeText={setTempSearch}
-          onSubmitEditing={() => setSearchQuery(tempSearch)}
           returnKeyType="search"
         />
         {tempSearch.length > 0 && (
@@ -107,22 +134,39 @@ export default function HomeScreen({ navigation }: any) {
 
       <View style={styles.filterContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {CITIES.map((city) => (
+          <TouchableOpacity 
+            style={[
+              styles.cityTab,
+              selectedRegionId === 'All' && styles.selectedTab
+            ]}
+            onPress={() => setSelectedRegionId('All')}
+          >
+            <Text 
+              style={[
+                styles.cityText,
+                selectedRegionId === 'All' && styles.selectedTabText
+              ]}
+            >
+              {t('common.all')}
+            </Text>
+          </TouchableOpacity>
+
+          {regions.map((region) => (
             <TouchableOpacity 
-              key={city}
+              key={region.id}
               style={[
                 styles.cityTab,
-                selectedCity === city && styles.selectedTab
+                selectedRegionId === region.id && styles.selectedTab
               ]}
-              onPress={() => setSelectedCity(city)}
+              onPress={() => setSelectedRegionId(region.id)}
             >
               <Text 
                 style={[
                   styles.cityText,
-                  selectedCity === city && styles.selectedTabText
+                  selectedRegionId === region.id && styles.selectedTabText
                 ]}
               >
-                {city === 'All' ? t('common.all') : city}
+                {getLocalizedName(region)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -145,9 +189,9 @@ export default function HomeScreen({ navigation }: any) {
         <View style={{ flex: 1 }}>
           <EmptyState
             icon={AlertCircle}
-            title={t('common.error_occurred') || 'Oops!'}
-            description={t('common.retry_message') || 'We could not load the cars. Please check your connection.'}
-            actionLabel={t('common.retry') || 'Retry'}
+            title={t('common.error_occurred')}
+            description={t('common.retry_message')}
+            actionLabel={t('common.retry')}
             onAction={() => fetchCars()}
           />
         </View>
@@ -163,9 +207,9 @@ export default function HomeScreen({ navigation }: any) {
             brand={item.brand}
             model={item.model}
             year={item.year}
-            location={item.location}
+            location={item.display_location || item.location}
             pricePerDay={parseFloat(item.price_per_day)}
-            imageUrl={item.images?.[0]}
+            imageUrl={item.image_url}
             onPress={() => navigation.navigate('CarDetail', { carId: item.id })}
           />
         )}
@@ -182,8 +226,8 @@ export default function HomeScreen({ navigation }: any) {
         ListEmptyComponent={
           <EmptyState
             icon={Car}
-            title={t('home.empty') || 'No cars found'}
-            description={t('home.empty_description') || 'Try changing the filters or check back later.'}
+            title={t('home.empty')}
+            description={t('home.empty_description')}
           />
         }
       />
@@ -191,7 +235,7 @@ export default function HomeScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="dark-content" />
       {renderContent()}
     </SafeAreaView>

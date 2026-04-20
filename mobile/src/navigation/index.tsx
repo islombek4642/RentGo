@@ -11,6 +11,10 @@ import TabNavigator from './TabNavigator';
 import CarDetailScreen from '../screens/Main/CarDetailScreen';
 import BookingScreen from '../screens/Main/BookingScreen';
 import BookingSuccessScreen from '../screens/Main/BookingSuccessScreen';
+import OwnerDashboardScreen from '../screens/Owner/OwnerDashboardScreen';
+import MyCarsScreen from '../screens/Owner/MyCarsScreen';
+import AddEditCarScreen from '../screens/Owner/AddEditCarScreen';
+import ReviewScreen from '../screens/Main/ReviewScreen';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants/theme';
 
@@ -49,6 +53,12 @@ export default function RootNavigator() {
               gestureEnabled: false
             }} 
           />
+          {/* Owner Stack */}
+          <Stack.Screen name="OwnerDashboard" component={OwnerDashboardScreen} />
+          <Stack.Screen name="MyCars" component={MyCarsScreen} />
+          <Stack.Screen name="AddCar" component={AddEditCarScreen} />
+          <Stack.Screen name="EditCar" component={AddEditCarScreen} />
+          <Stack.Screen name="Review" component={ReviewScreen} />
         </>
       )}
     </Stack.Navigator>

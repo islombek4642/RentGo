@@ -5,9 +5,19 @@ import { HTTP_STATUS } from '../../constants/index.js';
 class CarController {
   getAllCars = asyncHandler(async (req, res) => {
     const { cars, pagination } = await carService.getAllCars(req.query);
+    const data = await carService.getAllCars(req.query, req.lang);
     res.status(HTTP_STATUS.OK).json({
       status: 'success',
-      data: { cars, pagination },
+      data,
+    });
+  });
+
+  getMyCars = asyncHandler(async (req, res) => {
+    const cars = await carService.getOwnerCars(req.user.id);
+    res.status(HTTP_STATUS.OK).json({
+      status: 'success',
+      results: cars.length,
+      data: { cars },
     });
   });
 

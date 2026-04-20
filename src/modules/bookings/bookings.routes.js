@@ -124,6 +124,7 @@ router.post('/', validate(createBookingSchema), bookingController.createBooking)
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+router.get('/owner', bookingController.getOwnerBookings);
 router.get('/my', bookingController.getMyBookings);
 
 /**

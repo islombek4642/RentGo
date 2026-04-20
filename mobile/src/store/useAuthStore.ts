@@ -7,6 +7,9 @@ interface User {
   name: string;
   phone: string;
   role: string;
+  car_count: number;
+  is_verified: boolean;
+  license_image_url?: string;
 }
 
 interface AuthState {

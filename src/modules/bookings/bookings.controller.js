@@ -22,6 +22,15 @@ class BookingController {
     });
   });
 
+  getOwnerBookings = asyncHandler(async (req, res) => {
+    const bookings = await bookingService.getOwnerBookings(req.user.id);
+    res.status(HTTP_STATUS.OK).json({
+      status: 'success',
+      results: bookings.length,
+      data: { bookings },
+    });
+  });
+
   updateStatus = asyncHandler(async (req, res) => {
     const { status } = req.body;
     const booking = await bookingService.updateBookingStatus(

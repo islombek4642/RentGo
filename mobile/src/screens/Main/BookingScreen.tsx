@@ -340,15 +340,22 @@ export default function BookingScreen({ route, navigation }: Props) {
                 </Text>
               </View>
 
+              <View style={[styles.infoBox, { backgroundColor: COLORS.success + '10', borderColor: COLORS.success + '30', borderWidth: 1 }]}>
+                <Info size={16} color={COLORS.success} />
+                <Text style={[styles.infoText, { color: COLORS.success, fontWeight: '600' }]}>
+                  {t('booking.cash_payment_notice')}
+                </Text>
+              </View>
+
               <View style={styles.priceBreakdown}>
                 <Text style={styles.sectionTitle}>{t('booking.price_details')}</Text>
                 <View style={styles.priceRow}>
                   <Text style={styles.priceLabel}>{t('booking.daily_rate')} x {billingDays} {t('booking.days')}</Text>
-                  <Text style={styles.priceValue}>${(parseFloat(car.price_per_day) * billingDays).toLocaleString()}</Text>
+                  <Text style={styles.priceValue}>{(parseFloat(car.price_per_day) * billingDays).toLocaleString()} {t('common.currency')}</Text>
                 </View>
                 <View style={[styles.priceRow, styles.totalRow]}>
                   <Text style={styles.totalLabel}>{t('booking.total_price')}</Text>
-                  <Text style={styles.totalValue}>${totalPrice.toLocaleString()}</Text>
+                  <Text style={styles.totalValue}>{totalPrice.toLocaleString()} {t('common.currency')}</Text>
                 </View>
               </View>
 

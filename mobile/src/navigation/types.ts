@@ -17,4 +17,10 @@ export type RootStackParamList = {
   CarDetail: { carId: string };
   BookingConfirm: { carId: string; startDate: string; endDate: string };
   BookingSuccess: { bookingId: string; carName: string; totalPrice: number; dates: string };
+  // Owner Screens
+  OwnerDashboard: undefined;
+  MyCars: undefined;
+  AddCar: undefined;
+  EditCar: { carId: string };
+  Review: { carId: string; bookingId: string };
 };

@@ -1,5 +1,6 @@
 {
   "common": {
+    "lang_code": "uz",
     "error": "Xato",
     "success": "Muvaffaqiyatli",
     "loading": "Yuklanmoqda...",
@@ -18,12 +19,23 @@
     "retry_message": "Nimadir xato ketdi. Iltimos, aloqani tekshiring.",
     "error_occurred": "Xatolik yuz berdi",
     "all": "Barchasi",
-    "user": "Foydalanuvchi"
+    "user": "Foydalanuvchi",
+    "owner": "Mashina egasi",
+    "add_photo": "Rasm qo'shish",
+    "confirm": "Tasdiqlash",
+    "edit": "Tahrirlash",
+    "delete": "O'chirish",
+    "status": "Holati",
+    "total_cars": "{{count}} ta mashina",
+    "confirm_delete_msg": "Haqiqatan ham ushbu e'lonni o'chirmoqchimisiz?",
+    "confirm_delete_message": "Haqiqatan ham ushbu e'lonni o'chirmoqchimisiz?",
+    "currency": "so'm"
   },
   "nav": {
     "home": "Asosiy",
     "bookings": "Buyurtmalar",
-    "profile": "Profil"
+    "profile": "Profil",
+    "owner_dashboard": "Egalik rejimi"
   },
   "auth": {
     "welcome": "Xush Kelibsiz",
@@ -45,7 +57,10 @@
     "session_expired": "Seans muddati tugadi. Iltimos, qayta kiring.",
     "logged_out": "Tizimdan muvaffaqiyatli chiqildi",
     "login_success": "Xush kelibsiz! Tizimga muvaffaqiyatli kirdingiz.",
-    "register_success": "Akkaunt muvaffaqiyatli yaratildi!"
+    "register_success": "Akkaunt muvaffaqiyatli yaratildi!",
+    "name_placeholder": "John Doe",
+    "phone_placeholder": "+998 90 123 45 67",
+    "password_placeholder": "••••••••"
   },
   "home": {
     "greeting": "O'zingizga mos",
@@ -58,6 +73,10 @@
   "car": {
     "view": "Ko'rish",
     "book_now": "Band qilish",
+    "brand": "Brend",
+    "model_label": "Model",
+    "price": "Kunlik narx (so'm)",
+    "location": "Joylashuv (shahar)",
     "specifications": "Texnik xususiyatlari",
     "features": "Qulayliklar",
     "description_title": "Tavsif",
@@ -70,7 +89,12 @@
     "not_available": "Avtomobil mavjud emas",
     "model": "Model",
     "electric": "Elektr",
-    "description_template": "Ushbu {{brand}} {{model}} bilan hashamat va unumdorlikni his qiling. {{location}} bo'ylab sayohatlaringiz uchun mos keladi, unutilmas sayohat uchun qulaylik, uslub va ilg'or xususiyatlarni taqdim etadi."
+    "description_template": "Ushbu {{brand}} {{model}} bilan hashamat va unumdorlikni his qiling. {{location}} bo'ylab sayohatlaringiz uchun mos keladi, unutilmas sayohat uchun qulaylik, uslub va ilg'or xususiyatlarni taqdim etadi.",
+    "placeholder_brand": "masalan, Chevrolet",
+    "placeholder_model": "masalan, Malibu",
+    "placeholder_year": "2024",
+    "placeholder_price": "500000",
+    "placeholder_location": "masalan, Toshkent"
   },
   "booking": {
     "title": "Band qilish tafsilotlari",
@@ -91,7 +115,16 @@
     "conflict_title": "Sanalar band",
     "conflict_msg": "Ushbu avtomobil allaqachon {{start}} dan {{end}} gacha band qilingan.",
     "book_from_next": "{{date}} dan boshlab band qilish",
-    "days": "kun"
+    "days": "kun",
+    "accept": "Qabul qilish",
+    "reject": "Rad etish",
+    "start_trip": "Ijarani boshlash",
+    "complete_trip": "Sayohatni yakunlash",
+    "cash_payment_notice": "To'lov qabul paytida naqd pul bilan amalga oshiriladi",
+    "renter_info": "Ijarachi ma'lumotlari",
+    "cancel": "Buyurtmani bekor qilish",
+    "cancel_confirm": "Haqiqatan ham ushbu buyurtmani bekor qilmoqchimisiz?",
+    "error_cancel_deadline": "Bekor qilish imkonsiz: boshlanishiga 24 soatdan kam vaqt qoldi."
   },
   "profile": {
     "my_bookings": "Mening buyurtmalarim",
@@ -100,11 +133,61 @@
     "no_bookings": "Sizda hali buyurtmalar yo'q.",
     "no_bookings_desc": "Sizning ijara tarixingiz bu yerda ko'rinadi.",
     "language": "Til",
-    "language_changed": "Til muvaffaqiyatli o'zgartirildi"
+    "language_changed": "Til muvaffaqiyatli o'zgartirildi",
+    "owner_dashboard": "Egalik paneli",
+    "list_car": "Mashinani ijaraga berish",
+    "my_cars": "Mening mashinalarim",
+    "owner_section": "Mashina egasi",
+    "verify_title": "Hisobni tasdiqlash",
+    "verify_desc": "Ishonchni oshirish va osonroq ijara olish uchun haydovchilik guvohnomangizni yuklang.",
+    "upload_license": "Guvohnomani yuklash",
+    "pending_verification": "Tasdiqlash kutilmoqda",
+    "verified": "Tasdiqlangan",
+    "verify_desc_pending": "Guvohnomangiz ko'rib chiqilmoqda. Iltimos kuting.",
+    "verify_desc_success": "Akkauntingiz ijaraga olish uchun tasdiqlangan.",
+    "verification_success": "Guvohnoma muvaffaqiyatli yuklandi! Tez orada ko'rib chiqamiz."
   },
   "status": {
     "pending": "Kutilmoqda",
     "confirmed": "Tasdiqlangan",
-    "cancelled": "Bekor qilingan"
+    "cancelled": "Bekor qilingan",
+    "rejected": "Rad etilgan",
+    "in_progress": "Ijara jarayonida",
+    "completed": "Yakunlangan"
+  },
+  "owner": {
+    "dashboard": "Egalik paneli",
+    "requests": "So'rovlar",
+    "active": "Faol",
+    "history": "Tarix",
+    "earnings": "Umumiy daromad",
+    "stat_active": "Faol ijaralar",
+    "stat_pending": "Yangi so'rovlar",
+    "empty_requests": "Yangi so'rovlar yo'q",
+    "empty_active": "Faol ijaralar yo'q",
+    "empty_history": "Ijara tarixi mavjud emas",
+    "add_car_title": "Mashinani qo'shish",
+    "edit_car_title": "Tashriflarni tahrirlash",
+    "no_cars": "Siz hali mashina qo'shmagansiz",
+    "add_first_car": "Birinchi mashinangizni qo'shing",
+    "dashboard_intro_title": "Ijara orqali daromad oling",
+    "dashboard_intro_desc": "Mashinangizni ijaraga berib pul ishlashni xohlaysizmi? Hoziroq ro'yxatdan o'tkazing.",
+    "start_listing": "Mashina qo'shish"
+  },
+  "review": {
+    "title": "Fikr qoldirish",
+    "subtitle": "Tajribangiz qanday bo'ldi?",
+    "rating_label": "Baholash",
+    "comment_placeholder": "Fikringizni shu yerga yozing...",
+    "submit": "Fikrni yuborish",
+    "success": "Fikringiz uchun rahmat!",
+    "reviews_title": "Fikrlar",
+    "no_reviews": "Hozircha fikrlar yo'q",
+    "error_already_reviewed": "Siz ushbu buyurtma uchun allaqachon fikr bildirgansiz",
+    "error_not_completed": "Faqat yakunlangan sayohatlar uchun fikr bildirish mumkin"
+  },
+  "filters": {
+    "region": "Viloyat",
+    "district": "Tuman"
   }
 }

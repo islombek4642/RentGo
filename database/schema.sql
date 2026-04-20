@@ -8,14 +8,39 @@ CREATE TABLE IF NOT EXISTS users (
     phone VARCHAR(20) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+    is_verified BOOLEAN DEFAULT FALSE,
+    license_image_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Regions Table
+CREATE TABLE IF NOT EXISTS regions (
+    id INTEGER PRIMARY KEY,
+    soato_id INTEGER,
+    name_uz VARCHAR(255) NOT NULL,
+    name_ru VARCHAR(255),
+    name_oz VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Districts Table
+CREATE TABLE IF NOT EXISTS districts (
+    id INTEGER PRIMARY KEY,
+    region_id INTEGER NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
+    soato_id INTEGER,
+    name_uz VARCHAR(255) NOT NULL,
+    name_ru VARCHAR(255),
+    name_oz VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Cars Table
 CREATE TABLE IF NOT EXISTS cars (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    region_id INTEGER REFERENCES regions(id) ON DELETE SET NULL,
+    district_id INTEGER REFERENCES districts(id) ON DELETE SET NULL,
     brand VARCHAR(100) NOT NULL,
     model VARCHAR(100) NOT NULL,
     year INTEGER NOT NULL,
@@ -35,7 +60,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'in_progress', 'cancelled', 'completed')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT check_dates CHECK (end_date >= start_date)
@@ -60,3 +85,20 @@ CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_dates ON bookings(start_date, end_date);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
+
+-- Reviews Table
+CREATE TABLE IF NOT EXISTS reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+    reviewer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    target_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT one_review_per_booking UNIQUE(booking_id, reviewer_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_car_id ON reviews(car_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_target_id ON reviews(target_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_booking_id ON reviews(booking_id);

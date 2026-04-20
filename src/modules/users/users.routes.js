@@ -1,6 +1,7 @@
 import express from 'express';
 import userController from './users.controller.js';
 import { protect } from '../../middleware/auth.middleware.js';
+import { upload } from '../../middleware/upload.middleware.js';
 
 const router = express.Router();
 
@@ -92,5 +93,29 @@ router.get('/me', userController.getProfile);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch('/me', userController.updateProfile);
+
+/**
+ * @swagger
+ * /users/verify:
+ *   post:
+ *     summary: Upload driver's license for verification
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               license:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Verification file uploaded successfully
+ */
+router.post('/verify', upload.single('license'), userController.uploadLicense);
 
 export default router;

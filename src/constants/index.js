@@ -17,6 +17,7 @@ export const ROLES = {
 export const BOOKING_STATUS = {
   PENDING: 'pending',
   CONFIRMED: 'confirmed',
+  IN_PROGRESS: 'in_progress',
   CANCELLED: 'cancelled',
   COMPLETED: 'completed',
 };

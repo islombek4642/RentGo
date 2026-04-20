@@ -7,10 +7,14 @@ import { setupSwagger } from './config/swagger.js';
 import routes from './routes/index.js';
 import AppError from './utils/AppError.js';
 import { HTTP_STATUS } from './constants/index.js';
+import { config } from './config/env.js';
 
 const app = express();
 
 // 1) GLOBAL MIDDLEWARES
+// Serve static upload files
+app.use('/uploads', express.static(config.uploadPath));
+
 // Swagger Documentation
 setupSwagger(app);
 

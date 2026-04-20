@@ -40,7 +40,12 @@ const BookingSuccessScreen: React.FC<Props> = ({ route, navigation }) => {
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>{t('booking.total_price')}</Text>
             <Text style={[styles.detailValue, { color: COLORS.primary, fontWeight: '700' }]}>
-              ${totalPrice.toLocaleString()}
+              {totalPrice.toLocaleString()} {t('common.currency')}
+            </Text>
+          </View>
+          <View style={[styles.detailRow, { borderBottomWidth: 0, marginTop: 10 }]}>
+             <Text style={[styles.detailValue, { color: COLORS.success, fontSize: 13, textAlign: 'center', width: '100%' }]}>
+              {t('booking.cash_payment_notice')}
             </Text>
           </View>
         </View>

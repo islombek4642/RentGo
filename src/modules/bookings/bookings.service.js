@@ -3,7 +3,7 @@ import carService from '../cars/cars.service.js';
 import AppError from '../../utils/AppError.js';
 import { transaction } from '../../config/db.js';
 import { t } from '../../utils/i18n.js';
-import { HTTP_STATUS } from '../../constants/index.js';
+import { HTTP_STATUS, BOOKING_STATUS } from '../../constants/index.js';
 
 class BookingService {
   async createBooking(userId, bookingData, lang) {
@@ -89,15 +89,56 @@ class BookingService {
     return await bookingRepository.findAllByUser(userId);
   }
 
-  async updateBookingStatus(bookingId, userId, status, userRole, lang) {
+  async getOwnerBookings(ownerId) {
+    return await bookingRepository.findAllByOwner(ownerId);
+  }
+
+  async updateBookingStatus(bookingId, userId, newStatus, userRole, lang) {
     const booking = await bookingRepository.findById(bookingId);
     if (!booking) throw new AppError(t(lang, 'booking.not_found'), HTTP_STATUS.NOT_FOUND);
 
-    if (booking.user_id !== userId && userRole !== 'admin') {
+    // Get car to check ownership
+    const car = await carService.getCar(booking.car_id, lang);
+    const isOwner = car.owner_id === userId;
+    const isRenter = booking.user_id === userId;
+    const isAdmin = userRole === 'admin';
+
+    const currentStatus = booking.status;
+
+    // Strict State Machine Transitions
+    const allowedTransitions = {
+      pending: {
+        confirmed: isOwner || isAdmin,
+        rejected: isOwner || isAdmin,
+        cancelled: isRenter || isAdmin,
+      },
+      confirmed: {
+        in_progress: isOwner || isAdmin,
+        cancelled: isRenter || isAdmin,
+      },
+      in_progress: {
+        completed: isOwner || isAdmin,
+      },
+    };
+
+    if (!allowedTransitions[currentStatus] || !allowedTransitions[currentStatus][newStatus]) {
       throw new AppError(t(lang, 'common.forbidden'), HTTP_STATUS.FORBIDDEN);
     }
 
-    return await bookingRepository.updateStatus(bookingId, status);
+    // Trust System: Cancellation Policy Enforcement
+    if (newStatus === BOOKING_STATUS.CANCELLED && !isAdmin) {
+      if (currentStatus === BOOKING_STATUS.CONFIRMED) {
+        const now = new Date();
+        const startTime = new Date(booking.start_date);
+        const diffHours = (startTime - now) / (1000 * 60 * 60);
+
+        if (diffHours < 24) {
+          throw new AppError(t(lang, 'booking.error_cancel_deadline'), HTTP_STATUS.BAD_REQUEST);
+        }
+      }
+    }
+
+    return await bookingRepository.updateStatus(bookingId, newStatus);
   }
 
   async updateBookingDates(bookingId, userId, newStartDate, newEndDate, lang) {

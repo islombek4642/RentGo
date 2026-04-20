@@ -5,15 +5,18 @@ import {
   StyleSheet, 
   FlatList, 
   RefreshControl,
-  TouchableOpacity
+  TouchableOpacity,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect as useNavigationFocusEffect } from '@react-navigation/native';
 import { COLORS, SPACING, TYPOGRAPHY, SIZES, SHADOWS } from '../../constants/theme';
 import api from '../../services/api';
 import Skeleton from '../../components/Skeleton/Skeleton';
 import EmptyState from '../../components/EmptyState';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Clock, AlertCircle, ChevronRight } from 'lucide-react-native';
+import { Calendar, Clock, AlertCircle, ChevronRight, Trash2, Star, CheckCircle2 } from 'lucide-react-native';
+import { toast } from '../../utils/toast';
 
 export default function MyBookingsScreen({ navigation }: any) {
   const { t } = useTranslation();
@@ -39,9 +42,38 @@ export default function MyBookingsScreen({ navigation }: any) {
     }
   }, []);
 
-  React.useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
+  // Automatically refresh when the screen comes into focus
+  useNavigationFocusEffect(
+    React.useCallback(() => {
+      fetchBookings(true);
+    }, [fetchBookings])
+  );
+
+  const handleCancel = (bookingId: string) => {
+    Alert.alert(
+      t('booking.cancel'),
+      t('booking.cancel_confirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { 
+          text: t('booking.cancel'), 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await api.patch(`/bookings/${bookingId}/status`, { status: 'cancelled' });
+              if (response.data.status === 'success') {
+                toast.success(t('common.success'));
+                fetchBookings(true);
+              }
+            } catch (error: any) {
+              const msg = error.response?.data?.message || t('common.error_occurred');
+              toast.error(t('common.error'), msg);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -51,6 +83,10 @@ export default function MyBookingsScreen({ navigation }: any) {
         return { color: COLORS.warning, label: t('status.pending') };
       case 'cancelled': 
         return { color: COLORS.error, label: t('status.cancelled') };
+      case 'completed':
+        return { color: COLORS.gray[600], label: t('status.completed') };
+      case 'in_progress':
+        return { color: COLORS.primary, label: t('status.in_progress') };
       default: 
         return { color: COLORS.gray[500], label: status };
     }
@@ -58,7 +94,6 @@ export default function MyBookingsScreen({ navigation }: any) {
 
   const renderBookingItem = ({ item }: { item: any }) => {
     const status = getStatusConfig(item.status);
-    // Data Safety: Fallback for missing brand/model
     const carName = item.brand && item.model ? `${item.brand} ${item.model}` : t('car.not_available');
 
     const formatDate = (dateStr: string) => {
@@ -85,11 +120,40 @@ export default function MyBookingsScreen({ navigation }: any) {
           </View>
         </View>
 
+        <View style={styles.priceSection}>
+           <Text style={styles.priceLabel}>{t('booking.total_price')}</Text>
+           <Text style={styles.priceValue}>{parseFloat(item.total_price).toLocaleString()} {t('common.currency')}</Text>
+        </View>
+
         <View style={styles.cardFooter}>
-          <View>
-            <Text style={styles.priceLabel}>{t('booking.total_price')}</Text>
-            <Text style={styles.priceValue}>${parseFloat(item.total_price).toLocaleString()}</Text>
+          <View style={styles.actionsRow}>
+            {(item.status === 'pending' || item.status === 'confirmed') && (
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.cancelButton]}
+                onPress={() => handleCancel(item.id)}
+              >
+                <Trash2 size={16} color={COLORS.error} />
+              </TouchableOpacity>
+            )}
+
+            {item.status === 'completed' && !item.has_review && (
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.reviewButton]}
+                onPress={() => navigation.navigate('Review', { bookingId: item.id, carId: item.car_id })}
+              >
+                <Star size={14} color={COLORS.white} fill={COLORS.white} />
+                <Text style={styles.reviewButtonText}>{t('review.submit')}</Text>
+              </TouchableOpacity>
+            )}
+
+            {item.status === 'completed' && item.has_review && (
+              <View style={styles.reviewedBadge}>
+                <CheckCircle2 size={14} color={COLORS.success} />
+                <Text style={styles.reviewedText}>{t('review.success')}</Text>
+              </View>
+            )}
           </View>
+
           <TouchableOpacity 
             style={styles.detailsButton}
             onPress={() => navigation.navigate('CarDetail', { carId: item.car_id, isReadOnly: true })}
@@ -121,7 +185,7 @@ export default function MyBookingsScreen({ navigation }: any) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('nav.bookings')}</Text>
       </View>
@@ -191,7 +255,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
     paddingBottom: SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.gray[50],
@@ -219,10 +283,17 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
   },
+  priceSection: {
+    marginBottom: SPACING.md,
+    paddingBottom: SPACING.sm,
+  },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.gray[50],
   },
   priceLabel: {
     ...TYPOGRAPHY.caption,
@@ -236,12 +307,56 @@ const styles = StyleSheet.create({
   detailsButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 4,
   },
   detailsText: {
     ...TYPOGRAPHY.body2,
     color: COLORS.primary,
     fontWeight: '600',
     marginRight: 4,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  actionButton: {
+    height: 32,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  cancelButton: {
+    backgroundColor: COLORS.error + '10',
+    borderWidth: 1,
+    borderColor: COLORS.error + '20',
+  },
+  reviewButton: {
+    backgroundColor: COLORS.primary,
+  },
+  reviewButtonText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.white,
+    fontWeight: '700',
+    fontSize: 11,
+  },
+  reviewedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: COLORS.success + '10',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  reviewedText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.success,
+    fontWeight: '600',
+    fontSize: 11,
   },
   skeletonCard: {
     backgroundColor: COLORS.white,
@@ -252,4 +367,3 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   }
 });
-

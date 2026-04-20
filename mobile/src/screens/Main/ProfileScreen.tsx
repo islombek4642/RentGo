@@ -4,18 +4,31 @@ import {
   Text, 
   StyleSheet, 
   TouchableOpacity, 
-  FlatList,
+  ScrollView,
   Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/useAuthStore';
 import { COLORS, SPACING, TYPOGRAPHY, SIZES } from '../../constants/theme';
-import api from '../../services/api';
-import Skeleton from '../../components/Skeleton/Skeleton';
-import EmptyState from '../../components/EmptyState';
 import { toast } from '../../utils/toast';
 import { useTranslation } from 'react-i18next';
-import { LogOut, Clock, Languages, Globe, Calendar, AlertCircle, User, Phone } from 'lucide-react-native';
+import { 
+  LogOut, 
+  LayoutDashboard, 
+  Car, 
+  PlusCircle, 
+  Globe, 
+  User, 
+  Phone, 
+  ChevronRight,
+  ShieldCheck,
+  MapPin,
+  CheckCircle2,
+  Clock,
+  Camera
+} from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import api from '../../services/api';
 
 const LANGUAGES = [
   { code: 'uz', label: 'Oʻzbek' },
@@ -23,9 +36,9 @@ const LANGUAGES = [
   { code: 'en', label: 'English' },
 ];
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }: any) => {
   const { t, i18n } = useTranslation();
-  const { user, logout } = useAuthStore();
+  const { user, logout, updateUser } = useAuthStore();
 
   const changeLanguage = (code: string) => {
     i18n.changeLanguage(code);
@@ -50,13 +63,59 @@ const ProfileScreen = () => {
     );
   };
 
+  const uploadLicense = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      toast.error(t('common.error'), 'Need permissions to access photo library');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      const selectedImage = result.assets[0];
+      const formData = new FormData();
+      
+      // @ts-ignore
+      formData.append('license', {
+        uri: selectedImage.uri,
+        type: 'image/jpeg',
+        name: 'license.jpg',
+      });
+
+      try {
+        toast.info(t('common.loading'));
+        const response = await api.post('/users/verify', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        
+        if (response.data.status === 'success') {
+          updateUser(response.data.data.user);
+          toast.success(t('profile.verification_success'));
+        }
+      } catch (error: any) {
+        console.error('Upload error:', error);
+        toast.error(t('common.error'), error.response?.data?.message || t('common.error_occurred'));
+      }
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Sticky Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{t('nav.profile')}</Text>
       </View>
-      <View style={styles.content}>
-        {/* User Profile Header */}
+
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+      >
+        {/* Avatar & Info */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
             <User size={40} color={COLORS.primary} />
@@ -71,8 +130,53 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* Language Selection Section */}
-        <View style={styles.languageSection}>
+        {/* Verification Status */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <ShieldCheck size={18} color={COLORS.text.primary} />
+            <Text style={styles.sectionTitle}>{t('profile.verify_title')}</Text>
+          </View>
+          
+          <View style={[styles.verificationCard, user?.is_verified && styles.verifiedCard]}>
+            {user?.is_verified ? (
+              <>
+                <View style={[styles.statusIcon, { backgroundColor: COLORS.success + '20' }]}>
+                  <CheckCircle2 size={24} color={COLORS.success} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.verificationStatusText}>{t('profile.verified')}</Text>
+                  <Text style={styles.verificationDescText}>{t('profile.verify_desc_success') || 'Your account is verified for renting.'}</Text>
+                </View>
+              </>
+            ) : user?.license_image_url ? (
+              <>
+                <View style={[styles.statusIcon, { backgroundColor: COLORS.warning + '20' }]}>
+                  <Clock size={24} color={COLORS.warning} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.verificationStatusText}>{t('profile.pending_verification')}</Text>
+                  <Text style={styles.verificationDescText}>{t('profile.verify_desc_pending') || 'We are reviewing your license. Please wait.'}</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.verificationDescText}>{t('profile.verify_desc')}</Text>
+                  <TouchableOpacity 
+                    style={styles.uploadButton}
+                    onPress={uploadLicense}
+                  >
+                    <Camera size={18} color={COLORS.white} />
+                    <Text style={styles.uploadButtonText}>{t('profile.upload_license')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+
+        {/* Language Selection */}
+        <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Globe size={18} color={COLORS.text.primary} />
             <Text style={styles.sectionTitle}>{t('profile.language')}</Text>
@@ -98,14 +202,53 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* Action List */}
-        <View style={styles.actionList}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <LogOut size={20} color={COLORS.error} />
-            <Text style={styles.logoutText}>{t('profile.sign_out')}</Text>
+        {/* Owner Actions */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Car size={18} color={COLORS.text.primary} />
+            <Text style={styles.sectionTitle}>{t('profile.owner_section') || 'Owner'}</Text>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.menuItem} 
+            onPress={() => navigation.navigate('OwnerDashboard')}
+          >
+            <View style={styles.menuIconBox}>
+              <LayoutDashboard size={20} color={COLORS.primary} />
+            </View>
+            <Text style={styles.menuText}>{t('profile.owner_dashboard')}</Text>
+            <ChevronRight size={18} color={COLORS.gray[400]} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.menuItem} 
+            onPress={() => navigation.navigate('MyCars')}
+          >
+            <View style={styles.menuIconBox}>
+              <Car size={20} color={COLORS.primary} />
+            </View>
+            <Text style={styles.menuText}>{t('profile.my_cars')}</Text>
+            <ChevronRight size={18} color={COLORS.gray[400]} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.menuItem, styles.highlightedItem]}
+            onPress={() => navigation.navigate('AddCar')}
+          >
+            <View style={[styles.menuIconBox, { backgroundColor: COLORS.primary + '15' }]}>
+              <PlusCircle size={20} color={COLORS.primary} />
+            </View>
+            <Text style={styles.menuText}>{t('profile.list_car')}</Text>
+            <ChevronRight size={18} color={COLORS.gray[400]} />
           </TouchableOpacity>
         </View>
-      </View>
+
+        {/* Logout */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <LogOut size={20} color={COLORS.error} />
+          <Text style={styles.logoutText}>{t('profile.sign_out')}</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -113,7 +256,7 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background,
   },
   header: {
     paddingHorizontal: SPACING.lg,
@@ -127,20 +270,21 @@ const styles = StyleSheet.create({
     color: COLORS.text.primary,
   },
   content: {
-    flex: 1,
     paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.xxl,
   },
   profileHeader: {
     alignItems: 'center',
     paddingVertical: SPACING.xl,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.gray[100],
+    marginBottom: SPACING.lg,
   },
   avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: COLORS.gray[100],
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: COLORS.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
@@ -162,8 +306,8 @@ const styles = StyleSheet.create({
   roleBadge: {
     marginTop: SPACING.sm,
     backgroundColor: COLORS.primary + '15',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
     borderRadius: 20,
   },
   roleText: {
@@ -171,31 +315,34 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: '700',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  languageSection: {
-    marginTop: SPACING.xl,
-    paddingBottom: SPACING.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray[100],
+  section: {
+    marginBottom: SPACING.lg,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SPACING.md,
   },
+  sectionTitle: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.text.primary,
+    marginLeft: 8,
+  },
   languageGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 8,
   },
   languageButton: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     alignItems: 'center',
-    backgroundColor: COLORS.gray[50],
-    borderRadius: SIZES.radius.sm,
-    marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: COLORS.gray[100],
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.gray[200],
   },
   activeLanguage: {
     backgroundColor: COLORS.primary + '10',
@@ -208,87 +355,95 @@ const styles = StyleSheet.create({
   },
   activeLanguageLabel: {
     color: COLORS.primary,
+    fontWeight: '700',
   },
-  section: {
-    flex: 1,
-    marginTop: SPACING.lg,
-  },
-  sectionTitle: {
-    ...TYPOGRAPHY.h3,
-    marginBottom: SPACING.md,
-    color: COLORS.text.primary,
-    marginLeft: 8,
-  },
-  bookingCard: {
-    backgroundColor: COLORS.gray[50],
-    borderRadius: SIZES.radius.md,
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: SPACING.md,
+    borderRadius: SIZES.radius.md,
+    backgroundColor: COLORS.white,
     marginBottom: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.gray[100],
   },
-  bookingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  highlightedItem: {
+    borderColor: COLORS.primary + '40',
+    backgroundColor: COLORS.primary + '05',
+  },
+  menuIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: SIZES.radius.sm,
+    backgroundColor: COLORS.gray[100],
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginRight: SPACING.sm,
   },
-  carName: {
-    ...TYPOGRAPHY.h3,
-    fontSize: 16,
-    color: COLORS.text.primary,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  bookingDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dateText: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.gray[600],
-    marginLeft: 6,
-  },
-  bookingPrice: {
+  menuText: {
     ...TYPOGRAPHY.body2,
     color: COLORS.text.primary,
-    fontWeight: '700',
-  },
-  emptyBookings: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    ...TYPOGRAPHY.body2,
-    color: COLORS.gray[400],
-    textAlign: 'center',
-  },
-  actionList: {
-    paddingVertical: SPACING.lg,
+    flex: 1,
+    fontWeight: '600',
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     padding: SPACING.md,
     borderRadius: SIZES.radius.md,
     backgroundColor: COLORS.error + '10',
+    marginTop: SPACING.sm,
+    gap: 8,
   },
   logoutText: {
     ...TYPOGRAPHY.button,
     color: COLORS.error,
-    marginLeft: 10,
+  },
+  verificationCard: {
+    backgroundColor: COLORS.white,
+    padding: SPACING.lg,
+    borderRadius: SIZES.radius.md,
+    borderWidth: 1,
+    borderColor: COLORS.gray[100],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  verifiedCard: {
+    borderColor: COLORS.success + '50',
+    backgroundColor: COLORS.success + '05',
+  },
+  statusIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verificationStatusText: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.text.primary,
+    marginBottom: 2,
+  },
+  verificationDescText: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.text.secondary,
+    lineHeight: 20,
+  },
+  uploadButton: {
+    marginTop: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    borderRadius: SIZES.radius.sm,
+    gap: 8,
+  },
+  uploadButtonText: {
+    ...TYPOGRAPHY.button,
+    color: COLORS.white,
   },
 });
 

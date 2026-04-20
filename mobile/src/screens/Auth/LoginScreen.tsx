@@ -65,7 +65,7 @@ export default function LoginScreen({ navigation }: Props) {
         <View style={styles.form}>
           <Input
             label={t('auth.phone')}
-            placeholder="+998 90 123 45 67"
+            placeholder={t('auth.phone_placeholder')}
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
@@ -75,7 +75,7 @@ export default function LoginScreen({ navigation }: Props) {
             label={t('auth.password')}
             value={password}
             onChangeText={setPassword}
-            placeholder="••••••••"
+            placeholder={t('auth.password_placeholder')}
             isPassword
           />
 

@@ -19,6 +19,18 @@ class UserService {
     }
     return user;
   }
+
+  async uploadLicense(userId, filePath, lang) {
+    const user = await userRepository.update(userId, { 
+      license_image_url: filePath,
+      is_verified: false // Reset or keep false until admin review
+    });
+    
+    if (!user) {
+      throw new AppError(t(lang, 'common.internal_error'), HTTP_STATUS.NOT_FOUND);
+    }
+    return user;
+  }
 }
 
 export default new UserService();

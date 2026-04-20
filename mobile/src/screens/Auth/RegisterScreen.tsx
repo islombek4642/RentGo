@@ -80,13 +80,13 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.form}>
             <Input
               label={t('auth.name')}
-              placeholder="John Doe"
+              placeholder={t('auth.name_placeholder')}
               value={name}
               onChangeText={setName}
             />
             <Input
               label={t('auth.phone')}
-              placeholder="+998 90 123 45 67"
+              placeholder={t('auth.phone_placeholder')}
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
@@ -95,7 +95,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               label={t('auth.password')}
               value={password}
               onChangeText={setPassword}
-              placeholder="••••••••"
+              placeholder={t('auth.password_placeholder')}
               isPassword
             />
 

@@ -1,20 +1,29 @@
 import carRepository from './cars.repository.js';
+import locationRepository from '../locations/locations.repository.js';
 import AppError from '../../utils/AppError.js';
 import { ROLES, HTTP_STATUS } from '../../constants/index.js';
 import { t } from '../../utils/i18n.js';
 
 class CarService {
-  async getAllCars(filters) {
-    return await carRepository.findAll(filters);
+  async getAllCars(filters, lang) {
+    const result = await carRepository.findAll(filters);
+    result.cars = result.cars.map(car => this._formatCarLocation(car, lang));
+    return result;
+  }
+
+  async getOwnerCars(ownerId) {
+    const cars = await carRepository.findAllByOwner(ownerId);
+    return cars.map(car => this._formatCarLocation(car, 'uz')); // Default to uz for owner list
   }
 
   async getCar(id, lang) {
     const car = await carRepository.findById(id);
     if (!car) throw new AppError(t(lang, 'car.not_found'), HTTP_STATUS.NOT_FOUND);
-    return car;
+    return this._formatCarLocation(car, lang);
   }
 
   async createCar(userId, carData) {
+    await this._validateLocation(carData.region_id, carData.district_id);
     return await carRepository.create({ ...carData, owner_id: userId });
   }
 
@@ -24,6 +33,10 @@ class CarService {
     // Only owner can update
     if (car.owner_id !== userId) {
       throw new AppError(t(lang, 'car.not_owner'), HTTP_STATUS.FORBIDDEN);
+    }
+
+    if (carData.region_id || carData.district_id) {
+       await this._validateLocation(carData.region_id || car.region_id, carData.district_id || car.district_id);
     }
 
     return await carRepository.update(carId, carData);
@@ -38,6 +51,36 @@ class CarService {
     }
 
     await carRepository.delete(carId);
+  }
+
+  async _validateLocation(regionId, districtId) {
+    if (!regionId || !districtId) {
+      throw new AppError('Region and District are required.', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const region = await locationRepository.findRegionById(regionId);
+    if (!region) {
+      throw new AppError('Invalid Region ID', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const district = await locationRepository.findDistrictById(districtId);
+    if (!district || district.region_id !== parseInt(regionId)) {
+      throw new AppError('Invalid District ID for the selected Region', HTTP_STATUS.BAD_REQUEST);
+    }
+  }
+
+  _formatCarLocation(car, lang) {
+    const l = lang === 'ru' ? 'ru' : (lang === 'oz' ? 'oz' : 'uz');
+    
+    if (car.region_name_uz && car.district_name_uz) {
+      const regionName = car[`region_name_${l}`] || car.region_name_uz;
+      const districtName = car[`district_name_${l}`] || car.district_name_uz;
+      car.display_location = `${regionName}, ${districtName}`;
+    } else {
+      car.display_location = car.location; // Fallback to old string location
+    }
+    
+    return car;
   }
 }
 

@@ -7,13 +7,15 @@ import {
   ScrollView, 
   TouchableOpacity,
   Dimensions,
-  Alert
+  Alert,
+  Platform
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { COLORS, SPACING, TYPOGRAPHY, SIZES, SHADOWS } from '../../constants/theme';
 import api from '../../services/api';
+import CONFIG from '../../constants/config';
 import Button from '../../components/Button';
 import Skeleton from '../../components/Skeleton/Skeleton';
 import { toast } from '../../utils/toast';
@@ -25,7 +27,8 @@ import {
   MapPin, 
   Calendar,
   ShieldCheck,
-  AlertCircle 
+  AlertCircle,
+  Star 
 } from 'lucide-react-native';
 
 import { useTranslation } from 'react-i18next';
@@ -42,6 +45,8 @@ export default function CarDetailScreen({ route, navigation }: Props) {
   
   const [car, setCar] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
+  const [reviews, setReviews] = React.useState<any[]>([]);
+  const [stats, setStats] = React.useState<any>({ average: 0, count: 0 });
 
   React.useEffect(() => {
     if (!carId) {
@@ -53,8 +58,14 @@ export default function CarDetailScreen({ route, navigation }: Props) {
     const fetchCarDetail = async () => {
       try {
         setLoading(true);
-        const response = await api.get(`/cars/${carId}`);
-        setCar(response.data.data.car);
+        const [carRes, reviewsRes] = await Promise.all([
+          api.get(`/cars/${carId}`),
+          api.get(`/reviews/car/${carId}`)
+        ]);
+        
+        setCar(carRes.data.data.car);
+        setReviews(reviewsRes.data.data.reviews);
+        setStats(reviewsRes.data.data.stats);
       } catch (error) {
         console.error('Error fetching car details:', error);
         toast.error(t('common.error'), t('car.not_found'));
@@ -89,11 +100,21 @@ export default function CarDetailScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        bounces={false} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: isReadOnly ? insets.bottom + 20 : insets.bottom + 100 }}
+      >
         {/* Header Image */}
         <View style={styles.imageContainer}>
           <Image 
-            source={{ uri: car.images?.[0] || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800' }} 
+            source={{ 
+              uri: car.image_url 
+                ? (car.image_url.startsWith('http') 
+                  ? car.image_url 
+                  : `${CONFIG.API_URL.replace(/\/api\/v1\/?$/, '')}/${car.image_url.replace(/^\//, '')}`)
+                : 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800'
+            }} 
             style={styles.image} 
           />
           <TouchableOpacity 
@@ -111,14 +132,23 @@ export default function CarDetailScreen({ route, navigation }: Props) {
               <Text style={styles.title}>{car.model}</Text>
             </View>
             <View style={styles.priceContainer}>
-              <Text style={styles.price}>${parseFloat(car.price_per_day).toLocaleString()}</Text>
+              <Text style={styles.price}>{parseFloat(car.price_per_day).toLocaleString()} {t('common.currency')}</Text>
               <Text style={styles.perDay}>{t('car.per_day')}</Text>
             </View>
           </View>
 
-          <View style={styles.locationContainer}>
-            <MapPin size={16} color={COLORS.gray[500]} />
-            <Text style={styles.locationText}>{car.location}</Text>
+          <View style={styles.ratingRow}>
+            <View style={styles.starsWrapper}>
+              <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
+              <Text style={styles.ratingText}>
+                {stats.average || '0.0'} 
+                <Text style={styles.reviewCountText}> ({stats.count} {t('review.reviews_title')})</Text>
+              </Text>
+            </View>
+            <View style={styles.locationContainer}>
+              <MapPin size={16} color={COLORS.gray[500]} />
+              <Text style={styles.locationText}>{car.location}</Text>
+            </View>
           </View>
 
           <View style={styles.divider} />
@@ -131,7 +161,7 @@ export default function CarDetailScreen({ route, navigation }: Props) {
                 <Users size={20} color={COLORS.primary} />
               </View>
               <Text style={styles.specLabel}>{t('car.seats')}</Text>
-              <Text style={styles.specValue}>5 {t('car.seats')}</Text>
+              <Text style={styles.specValue}>{car.seats || 5} {t('car.seats')}</Text>
             </View>
             <View style={styles.specItem}>
               <View style={styles.iconBox}>
@@ -168,10 +198,40 @@ export default function CarDetailScreen({ route, navigation }: Props) {
               brand: car.brand, 
               model: car.model, 
               location: car.location 
-            })}
+             })}
           </Text>
           
-          <View style={{ height: 100 }} />
+          <View style={styles.divider} />
+          
+          {/* Reviews Section */}
+          <View style={styles.reviewsHeader}>
+            <Text style={styles.sectionTitle}>{t('review.reviews_title')}</Text>
+            {stats.count > 0 && <Text style={styles.avgRatingLarge}>{stats.average}</Text>}
+          </View>
+
+          {reviews.length > 0 ? (
+            reviews.map((rev) => (
+              <View key={rev.id} style={styles.reviewItem}>
+                <View style={styles.reviewUserRow}>
+                  <Text style={styles.reviewerName}>{rev.reviewer_name}</Text>
+                  <View style={styles.reviewStars}>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star 
+                        key={s} 
+                        size={12} 
+                        color={rev.rating >= s ? COLORS.warning : COLORS.gray[200]} 
+                        fill={rev.rating >= s ? COLORS.warning : 'transparent'} 
+                      />
+                    ))}
+                  </View>
+                </View>
+                <Text style={styles.reviewDate}>{new Date(rev.created_at).toLocaleDateString()}</Text>
+                {rev.comment && <Text style={styles.reviewComment}>{rev.comment}</Text>}
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noReviewsText}>{t('review.no_reviews')}</Text>
+          )}
         </View>
       </ScrollView>
 
@@ -249,15 +309,34 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.caption,
     color: COLORS.gray[500],
   },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.md,
-  },
   locationText: {
     ...TYPOGRAPHY.body2,
     color: COLORS.gray[500],
     marginLeft: 4,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  starsWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratingText: {
+    ...TYPOGRAPHY.body2,
+    fontWeight: '700',
+    color: COLORS.text.primary,
+  },
+  reviewCountText: {
+    fontWeight: '400',
+    color: COLORS.gray[500],
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   divider: {
     height: 1,
@@ -317,6 +396,53 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body2,
     color: COLORS.gray[600],
     lineHeight: 22,
+  },
+  reviewsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  avgRatingLarge: {
+    ...TYPOGRAPHY.h2,
+    color: COLORS.warning,
+  },
+  reviewItem: {
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray[50],
+  },
+  reviewUserRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  reviewerName: {
+    ...TYPOGRAPHY.body2,
+    fontWeight: '600',
+    color: COLORS.text.primary,
+  },
+  reviewStars: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  reviewDate: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.gray[400],
+    marginBottom: SPACING.xs,
+  },
+  reviewComment: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.text.secondary,
+    lineHeight: 20,
+  },
+  noReviewsText: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.gray[400],
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: SPACING.lg,
   },
   footer: {
     position: 'absolute',

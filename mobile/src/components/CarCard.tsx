@@ -8,8 +8,8 @@ import {
 } from 'react-native';
 import { COLORS, SPACING, SIZES, TYPOGRAPHY, SHADOWS } from '../constants/theme';
 import { Users, Fuel, MapPin } from 'lucide-react-native';
-
 import { useTranslation } from 'react-i18next';
+import CONFIG from '../constants/config';
 
 interface CarCardProps {
   brand: string;
@@ -32,6 +32,16 @@ const CarCard: React.FC<CarCardProps> = ({
 }) => {
   const { t } = useTranslation();
 
+  const getFullImageUrl = (url?: string) => {
+    if (!url) return 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800';
+    if (url.startsWith('http')) return url;
+    
+    // Remove /api/v1 from end of URL and handle potential leading slashes
+    const baseUrl = CONFIG.API_URL.replace(/\/api\/v1\/?$/, '');
+    const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+    return `${baseUrl}/${cleanPath}`;
+  };
+
   return (
     <TouchableOpacity 
       activeOpacity={0.9} 
@@ -39,7 +49,7 @@ const CarCard: React.FC<CarCardProps> = ({
       onPress={onPress}
     >
       <Image 
-        source={{ uri: imageUrl || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800' }} 
+        source={{ uri: getFullImageUrl(imageUrl) }} 
         style={styles.image} 
         resizeMode="cover"
       />
@@ -59,7 +69,7 @@ const CarCard: React.FC<CarCardProps> = ({
 
         <View style={styles.footer}>
           <View style={styles.priceContainer}>
-            <Text style={styles.price}>${pricePerDay.toLocaleString()}</Text>
+            <Text style={styles.price}>{pricePerDay.toLocaleString()} {t('common.currency')}</Text>
             <Text style={styles.perDay}>{t('car.per_day')}</Text>
           </View>
           <TouchableOpacity style={styles.bookButton} onPress={onPress}>

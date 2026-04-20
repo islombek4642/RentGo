@@ -85,6 +85,16 @@ const router = express.Router();
  */
 router.get('/', carController.getAllCars);
 
+// Private routes - require authentication
+// IMPORTANT: /my must be registered BEFORE protect + /:id
+// so Express doesn't treat the string 'my' as a car UUID
+router.use(protect);
+
+router.get('/my', carController.getMyCars);
+
+// Unprotect for public car-by-id lookup (re-add public access without protect for /:id)
+// Actually /:id is already public because it was registered before protect above.
+
 /**
  * @swagger
  * /cars/{id}:
@@ -124,9 +134,6 @@ router.get('/', carController.getAllCars);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/:id', carController.getCar);
-
-// Private routes — require authentication
-router.use(protect);
 
 /**
  * @swagger

@@ -3,7 +3,9 @@ import pool from '../../config/db.js';
 class AuthRepository {
   async findByPhone(phone) {
     const result = await pool.query(
-      'SELECT * FROM users WHERE phone = $1',
+      `SELECT u.*, 
+        (SELECT COUNT(*) FROM cars WHERE owner_id = u.id) as car_count
+       FROM users u WHERE phone = $1`,
       [phone]
     );
     return result.rows[0];
@@ -12,7 +14,7 @@ class AuthRepository {
   async create(user) {
     const { name, phone, password, role } = user;
     const result = await pool.query(
-      'INSERT INTO users (name, phone, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, phone, role, created_at',
+      'INSERT INTO users (name, phone, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, phone, role, created_at, 0 as car_count',
       [name, phone, password, role || 'user']
     );
     return result.rows[0];
@@ -20,7 +22,9 @@ class AuthRepository {
 
   async findById(id) {
     const result = await pool.query(
-      'SELECT id, name, phone, role, created_at FROM users WHERE id = $1',
+      `SELECT id, name, phone, role, created_at,
+        (SELECT COUNT(*) FROM cars WHERE owner_id = $1) as car_count
+       FROM users WHERE id = $1`,
       [id]
     );
     return result.rows[0];
