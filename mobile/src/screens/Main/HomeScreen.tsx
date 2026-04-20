@@ -35,10 +35,11 @@ export default function HomeScreen({ navigation }: any) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [tempSearch, setTempSearch] = React.useState('');
 
-  const fetchCars = React.useCallback(async (isRefresh = false) => {
+  const fetchCars = React.useCallback(async (isRefresh = false, silent = false) => {
     try {
       setHasError(false);
-      if (!isRefresh) setLoading(true);
+      // Only show loading skeleton on initial load or refresh, not on filter changes
+      if (!isRefresh && !silent) setLoading(true);
       
       let url = '/cars?available=true';
       if (selectedCity !== 'All') {
@@ -59,9 +60,16 @@ export default function HomeScreen({ navigation }: any) {
     }
   }, [selectedCity, searchQuery]);
 
+  // Initial load only - filters are handled separately
   React.useEffect(() => {
-    fetchCars();
-  }, [fetchCars]);
+    fetchCars(false, true);
+  }, []);
+
+  // Handle filter changes silently (without full screen reload)
+  React.useEffect(() => {
+    // Skip initial render, only update when filters actually change
+    fetchCars(false, true);
+  }, [selectedCity, searchQuery]);
 
   const onRefresh = () => {
     setRefreshing(true);
