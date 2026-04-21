@@ -18,14 +18,17 @@ class BookingService {
         throw new AppError(t(lang, 'booking.not_available'), HTTP_STATUS.BAD_REQUEST);
       }
 
-      // 2) Parse duration
-      const start = new Date(start_date);
-      const end = new Date(end_date);
+      // 2) Parse duration - ensure dates are treated as local dates without timezone
+      // Convert to YYYY-MM-DD format to avoid timezone issues
+      const startStr = start_date instanceof Date ? start_date.toISOString().split('T')[0] : start_date;
+      const endStr = end_date instanceof Date ? end_date.toISOString().split('T')[0] : end_date;
+      const start = new Date(startStr + 'T00:00:00');
+      const end = new Date(endStr + 'T00:00:00');
       const diffTime = Math.abs(end - start);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-      // 3) Check for overlaps
-      const overlaps = await bookingRepository.findOverlapping(car_id, start_date, end_date);
+      // 3) Check for overlaps - use date-only strings
+      const overlaps = await bookingRepository.findOverlapping(car_id, startStr, endStr);
       if (overlaps.length > 0) {
         
         // Calculate Next Available Date
@@ -74,12 +77,12 @@ class BookingService {
       // 4) Calculate total price
       const total_price = diffDays * car.price_per_day;
 
-      // 4) Create booking
+      // 4) Create booking - use date-only strings
       return await bookingRepository.create({
         car_id,
         user_id: userId,
-        start_date,
-        end_date,
+        start_date: startStr,
+        end_date: endStr,
         total_price,
       });
     });

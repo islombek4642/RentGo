@@ -40,14 +40,20 @@ class BookingRepository {
   }
 
   async findOverlapping(carId, startDate, endDate, excludeBookingId = null) {
+    // Convert to YYYY-MM-DD format if Date objects
+    const start = startDate instanceof Date ? startDate.toISOString().split('T')[0] : startDate;
+    const end = endDate instanceof Date ? endDate.toISOString().split('T')[0] : endDate;
+    
+    console.log('[OVERLAP CHECK]', { carId, start, end, excludeBookingId });
+    
     let query = `
-       SELECT * FROM bookings 
+       SELECT *, start_date::date as start_d, end_date::date as end_d FROM bookings 
        WHERE car_id = $1 
-       AND status IN ('pending', 'confirmed')
-       AND start_date <= $3 
-       AND end_date >= $2
+       AND status IN ('pending', 'confirmed', 'in_progress')
+       AND start_date::date <= $3::date 
+       AND end_date::date >= $2::date
     `;
-    const params = [carId, startDate, endDate];
+    const params = [carId, start, end];
 
     if (excludeBookingId) {
       params.push(excludeBookingId);
@@ -55,6 +61,10 @@ class BookingRepository {
     }
 
     const result = await pool.query(query, params);
+    console.log('[OVERLAP FOUND]', result.rows.length, 'bookings');
+    result.rows.forEach(r => {
+      console.log(`  - Booking ${r.id}: ${r.start_d} to ${r.end_d} (status: ${r.status})`);
+    });
     return result.rows;
   }
 

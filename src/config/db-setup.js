@@ -6,6 +6,22 @@ import { logger } from './logger.js';
 import { runSeedData } from '../utils/seed-utils.js';
 import { config } from './env.js';
 
+// Load regions and districts data
+let regionsData = [];
+let districtsData = [];
+try {
+  const regionsPath = path.join(process.cwd(), 'database', 'data', 'regions.json');
+  const districtsPath = path.join(process.cwd(), 'database', 'data', 'districts.json');
+  if (fs.existsSync(regionsPath)) {
+    regionsData = JSON.parse(fs.readFileSync(regionsPath, 'utf8'));
+  }
+  if (fs.existsSync(districtsPath)) {
+    districtsData = JSON.parse(fs.readFileSync(districtsPath, 'utf8'));
+  }
+} catch (error) {
+  logger.warn('Could not load regions/districts data files:', error.message);
+}
+
 const { Client } = pg;
 
 /**
@@ -61,16 +77,20 @@ export const setupDatabase = async () => {
   try {
     // 0) Ensure database itself exists
     await ensureDatabaseExists();
-    // 1) Migration Check: Does 'users' table exist?
+    // 1) Migration Check: Does all required tables exist?
     const tableCheck = await pool.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'users'
-      );
+      SELECT 
+        (SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users')) as has_users,
+        (SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'regions')) as has_regions,
+        (SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'districts')) as has_districts,
+        (SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'reviews')) as has_reviews;
     `);
 
-    const tablesExist = tableCheck.rows[0].exists;
+    const hasUsers = tableCheck.rows[0].has_users === true || tableCheck.rows[0].has_users === 't';
+    const hasRegions = tableCheck.rows[0].has_regions === true || tableCheck.rows[0].has_regions === 't';
+    const hasDistricts = tableCheck.rows[0].has_districts === true || tableCheck.rows[0].has_districts === 't';
+    const hasReviews = tableCheck.rows[0].has_reviews === true || tableCheck.rows[0].has_reviews === 't';
+    const tablesExist = hasUsers && hasRegions && hasDistricts && hasReviews;
 
     if (!tablesExist) {
       logger.info('Tables not found. Running schema migration...');
@@ -83,11 +103,93 @@ export const setupDatabase = async () => {
         await pool.query(statement);
       }
       logger.info('Database schema migration completed successfully! 🚀');
-    } else {
-      logger.info('Database structure already exists. Skipping migration.');
+    }
+    
+    // 1.5) Check and add missing columns to existing tables
+    // Check if cars table has region_id column
+    const columnCheck = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'cars' AND column_name = 'region_id'
+      ) as has_region_id;
+    `);
+    const hasRegionIdColumn = columnCheck.rows[0].has_region_id === true || columnCheck.rows[0].has_region_id === 't';
+    
+    if (!hasRegionIdColumn) {
+      logger.info('Adding missing location columns to cars table...');
+      await pool.query(`
+        ALTER TABLE cars 
+        ADD COLUMN IF NOT EXISTS region_id INTEGER REFERENCES regions(id) ON DELETE SET NULL,
+        ADD COLUMN IF NOT EXISTS district_id INTEGER REFERENCES districts(id) ON DELETE SET NULL;
+      `);
+      logger.info('Location columns added to cars table! ✅');
+    }
+    
+    // Check and create reviews table if missing
+    if (!hasReviews) {
+      logger.info('Creating reviews table...');
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS reviews (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+          reviewer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          target_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
+          rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+          comment TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT one_review_per_booking UNIQUE(booking_id, reviewer_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_reviews_car_id ON reviews(car_id);
+        CREATE INDEX IF NOT EXISTS idx_reviews_target_id ON reviews(target_id);
+        CREATE INDEX IF NOT EXISTS idx_reviews_booking_id ON reviews(booking_id);
+      `);
+      logger.info('Reviews table created! ✅');
     }
 
-    // 2) Idempotent Seeding Check
+    // 2) Seed regions and districts if empty
+    if (regionsData.length > 0 && districtsData.length > 0) {
+      const regionCountResult = await pool.query('SELECT COUNT(*) FROM regions');
+      const regionCount = parseInt(regionCountResult.rows[0].count);
+      
+      if (regionCount === 0) {
+        logger.info('Seeding regions and districts...');
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
+          
+          // Seed regions
+          for (const region of regionsData) {
+            await client.query(`
+              INSERT INTO regions (id, soato_id, name_uz, name_ru, name_oz)
+              VALUES ($1, $2, $3, $4, $5)
+              ON CONFLICT (id) DO NOTHING
+            `, [region.id, region.soato_id, region.name_uz, region.name_ru, region.name_oz]);
+          }
+          
+          // Seed districts
+          for (const district of districtsData) {
+            await client.query(`
+              INSERT INTO districts (id, region_id, soato_id, name_uz, name_ru, name_oz)
+              VALUES ($1, $2, $3, $4, $5, $6)
+              ON CONFLICT (id) DO NOTHING
+            `, [district.id, district.region_id, district.soato_id, district.name_uz, district.name_ru, district.name_oz]);
+          }
+          
+          await client.query('COMMIT');
+          logger.info(`Seeded ${regionsData.length} regions and ${districtsData.length} districts! ✅`);
+        } catch (error) {
+          await client.query('ROLLBACK');
+          logger.error('Failed to seed locations:', error);
+        } finally {
+          client.release();
+        }
+      } else {
+        logger.info('Regions already seeded. Skipping location seed.');
+      }
+    }
+
+    // 3) Idempotent Seeding Check for users and cars
     const userCountResult = await pool.query('SELECT COUNT(*) FROM users');
     const userCount = parseInt(userCountResult.rows[0].count);
 
