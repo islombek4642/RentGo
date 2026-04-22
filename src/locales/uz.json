@@ -22,7 +22,11 @@
     "unauthorized": "Kirishga ruxsat yo'q. Iltimos, tizimga kiring.",
     "forbidden": "Ruxsat etilmadi",
     "validation_error": "Ma'lumotlar noto'g'ri kiritilgan",
-    "internal_error": "Serverda xatolik yuz berdi",
-    "rate_limit": "So'rovlar juda ko'p. Iltimos, bir soatdan so'ng qayta urinib ko'ring."
+    "internal_error": "Ichki server xatoligi yuz berdi",
+    "rate_limit": "Juda ko'p so'rov yuborildi. Iltimos, keyinroq urinib ko'ring."
+  },
+  "profile": {
+    "upload_invalid_type": "Faqat .png, .jpg va .jpeg formatlariga ruxsat berilgan!",
+    "upload_too_large": "Fayl hajmi juda katta (maks. 5MB)"
   }
 }

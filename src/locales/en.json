@@ -24,5 +24,9 @@
     "validation_error": "Input data validation error",
     "internal_error": "Internal server error occurred",
     "rate_limit": "Too many requests. Please try again in an hour."
+  },
+  "profile": {
+    "upload_invalid_type": "Only .png, .jpg and .jpeg format allowed!",
+    "upload_too_large": "File size too large (max 5MB)"
   }
 }

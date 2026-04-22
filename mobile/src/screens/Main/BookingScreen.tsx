@@ -22,6 +22,7 @@ import { Calendar as CalendarIcon, Info, AlertCircle, ArrowRight, ChevronLeft, C
 import { toast } from '../../utils/toast';
 import { Calendar } from 'react-native-calendars';
 import { useTranslation } from 'react-i18next';
+import { formatDateLocal, parseDateLocal } from '../../utils/date';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingConfirm'>;
 
@@ -29,12 +30,11 @@ export default function BookingScreen({ route, navigation }: Props) {
   const { t } = useTranslation();
   const carId = route.params?.carId;
   const insets = useSafeAreaInsets();
-
-  const getTodayStr = () => new Date().toLocaleDateString('en-CA');
+  const todayStr = formatDateLocal(new Date());
 
   const [car, setCar] = React.useState<any>(null);
-  const [startDate, setStartDate] = React.useState(getTodayStr());
-  const [endDate, setEndDate] = React.useState<string | null>(getTodayStr());
+  const [startDate, setStartDate] = React.useState(todayStr);
+  const [endDate, setEndDate] = React.useState<string | null>(null);
 
   const [bookingConflict, setBookingConflict] = React.useState<{ start: string, end: string } | null>(null);
   const [nextAvailableDate, setNextAvailableDate] = React.useState<string | null>(null);
@@ -50,14 +50,16 @@ export default function BookingScreen({ route, navigation }: Props) {
 
   React.useEffect(() => {
     let pendingMatch = false;
-    if (startDate && carBookedDates.length) {
-      const sDate = new Date(startDate);
-      const eDate = endDate ? new Date(endDate) : new Date(startDate);
+    if (startDate && endDate && carBookedDates.length) {
+      const sDate = parseDateLocal(startDate);
+      const eDate = parseDateLocal(endDate);
+      // Half-open interval overlap: [sDate, eDate) vs [bStart, bEnd)
+      // Overlap iff sDate < bEnd AND eDate > bStart
       for (const b of carBookedDates) {
         if (b.status === 'pending') {
-          const bStart = new Date(b.start_date);
-          const bEnd = new Date(b.end_date);
-          if (sDate <= bEnd && eDate >= bStart) {
+          const bStart = b.start_date;
+          const bEnd = b.end_date;
+          if (startDate < bEnd && endDate > bStart) {
              pendingMatch = true;
              break;
           }
@@ -93,13 +95,19 @@ export default function BookingScreen({ route, navigation }: Props) {
   }, [carId, navigation, t]);
 
   React.useEffect(() => {
-    if (car) {
-      const start = new Date(startDate);
-      const end = endDate ? new Date(endDate) : new Date(startDate);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      setBillingDays(diffDays);
-      setTotalPrice(diffDays * parseFloat(car.price_per_day));
+    if (car && startDate && endDate) {
+      const start = parseDateLocal(startDate);
+      const end = parseDateLocal(endDate);
+      if (start && end) {
+        // Half-open interval: days = end - start (no +1)
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        setBillingDays(Math.max(diffDays, 1));
+        setTotalPrice(Math.max(diffDays, 1) * parseFloat(car.price_per_day));
+      }
+    } else if (car) {
+      setBillingDays(0);
+      setTotalPrice(0);
     }
   }, [startDate, endDate, car]);
 
@@ -110,17 +118,19 @@ export default function BookingScreen({ route, navigation }: Props) {
     setBookingConflict(null);
     setNextAvailableDate(null);
 
-    // If dates clash with pending (soft warning), allow them to proceed?
-    // User authorized: "Pending bookings should not fully prevent new bookings (soft constraint)"
-    // The backend blocks confirmed. So we just submit.
-
     try {
       setSubmitting(true);
+
+      if (!endDate || endDate <= startDate) {
+        toast.error(t('common.error'), t('booking.select_end_date') || 'Please select an end date');
+        setSubmitting(false);
+        return;
+      }
 
       const response = await api.post('/bookings', {
         car_id: carId,
         start_date: startDate,
-        end_date: endDate || startDate,
+        end_date: endDate,
         total_price: totalPrice
       });
 
@@ -170,16 +180,16 @@ export default function BookingScreen({ route, navigation }: Props) {
   const handleSmartBook = () => {
     if (nextAvailableDate) {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      const diffDays = endDate ?
-        Math.ceil(Math.abs(new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+      const start = parseDateLocal(startDate);
+      const end = parseDateLocal(endDate);
+      const diffDays = (start && end) ?
+        Math.round(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) : 1;
 
       setStartDate(nextAvailableDate);
-      if (diffDays > 0) {
-        const d = new Date(nextAvailableDate);
+      const d = parseDateLocal(nextAvailableDate);
+      if (d) {
         d.setDate(d.getDate() + diffDays);
-        setEndDate(d.toISOString().split('T')[0]);
-      } else {
-        setEndDate(null);
+        setEndDate(formatDateLocal(d));
       }
       setBookingConflict(null);
       setNextAvailableDate(null);
@@ -190,22 +200,26 @@ export default function BookingScreen({ route, navigation }: Props) {
     const marks: any = {};
 
     // 1. Draw Heatmap from backend
+    // end_date is exclusive (checkout day) — do NOT mark it as occupied
     carBookedDates.forEach((b: any) => {
-      let start = new Date(b.start_date);
-      const end = new Date(b.end_date);
+      let curr = parseDateLocal(b.start_date);
+      const end = parseDateLocal(b.end_date);
       const isConfirmed = b.status === 'confirmed';
       const color = isConfirmed ? COLORS.error + '40' : COLORS.warning + '40';
       const textColor = isConfirmed ? COLORS.error : COLORS.warning;
 
-      while (start <= end) {
-        const dateStr = start.toISOString().split('T')[0];
-        marks[dateStr] = {
-          color,
-          textColor,
-          disabled: isConfirmed,
-          disableTouchEvent: isConfirmed,
-        };
-        start.setDate(start.getDate() + 1);
+      // Half-open: mark [start, end) — end_date itself is free (checkout day)
+      if (curr && end) {
+        while (curr < end) {
+          const dateStr = formatDateLocal(curr);
+          marks[dateStr] = {
+            color,
+            textColor,
+            disabled: isConfirmed,
+            disableTouchEvent: isConfirmed,
+          };
+          curr.setDate(curr.getDate() + 1);
+        }
       }
     });
 
@@ -215,13 +229,17 @@ export default function BookingScreen({ route, navigation }: Props) {
     }
     if (endDate && endDate !== startDate) {
       marks[endDate] = { ...marks[endDate], endingDay: true, color: COLORS.primary, textColor: 'white' };
-      let curr = new Date(startDate);
-      curr.setDate(curr.getDate() + 1);
-      const endMarker = new Date(endDate);
-      while (curr < endMarker) {
-        const dateStr = curr.toISOString().split('T')[0];
-        marks[dateStr] = { ...marks[dateStr], color: COLORS.primary, textColor: 'white', opacity: 0.5 };
+      let curr = parseDateLocal(startDate);
+      if (curr) {
         curr.setDate(curr.getDate() + 1);
+        const endMarker = parseDateLocal(endDate);
+        if (endMarker) {
+          while (curr < endMarker) {
+            const dateStr = formatDateLocal(curr);
+            marks[dateStr] = { ...marks[dateStr], color: COLORS.primary, textColor: 'white', opacity: 0.5 };
+            curr.setDate(curr.getDate() + 1);
+          }
+        }
       }
     }
     return marks;
@@ -268,7 +286,7 @@ export default function BookingScreen({ route, navigation }: Props) {
                     markingType={'period'}
                     markedDates={getMarkedDates()}
                     onDayPress={onDayPress}
-                    minDate={getTodayStr()}
+                    minDate={todayStr}
                     renderHeader={(date) => (
                       <View style={styles.customCalendarHeader}>
                         <Text style={styles.calendarMonthText}>

@@ -76,6 +76,179 @@ describe('Bookings Module', () => {
 
       expect(res.status).toBe(400);
     });
+
+    // ================================================================
+    // NEW: Half-open interval [start, end) edge case tests
+    // ================================================================
+
+    it('should allow back-to-back bookings (end_date === start_date of next)', async () => {
+      // Booking A: [Apr 21, Apr 23)
+      await createTestBooking(car.id, user.id, {
+        start_date: '2026-12-21',
+        end_date: '2026-12-23',
+        status: 'confirmed'
+      });
+
+      // Booking B: [Apr 23, Apr 25) — should NOT overlap
+      const res = await request(app)
+        .post('/api/v1/bookings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          car_id: car.id,
+          start_date: '2026-12-23',
+          end_date: '2026-12-25'
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.status).toBe('success');
+    });
+
+    it('should allow booking when end_date of existing equals start_date of new (boundary equality)', async () => {
+      // Existing: [Dec 1, Dec 5)
+      await createTestBooking(car.id, user.id, {
+        start_date: '2026-12-01',
+        end_date: '2026-12-05',
+        status: 'confirmed'
+      });
+
+      // New: starts exactly on Dec 5 (checkout day of existing)
+      const res = await request(app)
+        .post('/api/v1/bookings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          car_id: car.id,
+          start_date: '2026-12-05',
+          end_date: '2026-12-08'
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.status).toBe('success');
+    });
+
+    it('should reject zero-day booking (start_date === end_date)', async () => {
+      const res = await request(app)
+        .post('/api/v1/bookings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          car_id: car.id,
+          start_date: '2026-12-10',
+          end_date: '2026-12-10'
+        });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should reject booking where end_date < start_date', async () => {
+      const res = await request(app)
+        .post('/api/v1/bookings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          car_id: car.id,
+          start_date: '2026-12-10',
+          end_date: '2026-12-08'
+        });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should create a valid 1-day booking (end = start + 1)', async () => {
+      const res = await request(app)
+        .post('/api/v1/bookings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          car_id: car.id,
+          start_date: '2026-12-10',
+          end_date: '2026-12-11'
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.booking).toBeDefined();
+      // Price should be 1 day × price_per_day
+      expect(parseFloat(res.body.data.booking.total_price)).toBe(parseFloat(car.price_per_day));
+    });
+
+    it('should correctly calculate price for multi-day booking (half-open)', async () => {
+      // [Dec 1, Dec 5) = 4 days
+      const res = await request(app)
+        .post('/api/v1/bookings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          car_id: car.id,
+          start_date: '2026-12-01',
+          end_date: '2026-12-05'
+        });
+
+      expect(res.status).toBe(201);
+      const expectedPrice = 4 * parseFloat(car.price_per_day);
+      expect(parseFloat(res.body.data.booking.total_price)).toBe(expectedPrice);
+    });
+
+    it('should block truly overlapping ranges', async () => {
+      // Existing: [Dec 10, Dec 15)
+      await createTestBooking(car.id, user.id, {
+        start_date: '2026-12-10',
+        end_date: '2026-12-15',
+        status: 'confirmed'
+      });
+
+      // New: [Dec 8, Dec 12) — overlaps with existing
+      const res = await request(app)
+        .post('/api/v1/bookings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          car_id: car.id,
+          start_date: '2026-12-08',
+          end_date: '2026-12-12'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.details?.code).toBe('BOOKING_CONFLICT');
+    });
+
+    it('should allow booking with 1-day gap between existing bookings', async () => {
+      // Existing: [Dec 10, Dec 13) — occupies Dec 10, 11, 12
+      await createTestBooking(car.id, user.id, {
+        start_date: '2026-12-10',
+        end_date: '2026-12-13',
+        status: 'confirmed'
+      });
+
+      // New: [Dec 14, Dec 16) — gap on Dec 13 (checkout day)
+      const res = await request(app)
+        .post('/api/v1/bookings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          car_id: car.id,
+          start_date: '2026-12-14',
+          end_date: '2026-12-16'
+        });
+
+      expect(res.status).toBe(201);
+    });
+
+    it('should return BOOKING_CONFLICT with nextAvailableDate on overlap', async () => {
+      // Existing: [Dec 10, Dec 15)
+      await createTestBooking(car.id, user.id, {
+        start_date: '2026-12-10',
+        end_date: '2026-12-15',
+        status: 'confirmed'
+      });
+
+      // Try overlapping: [Dec 12, Dec 17)
+      const res = await request(app)
+        .post('/api/v1/bookings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          car_id: car.id,
+          start_date: '2026-12-12',
+          end_date: '2026-12-17'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.details?.code).toBe('BOOKING_CONFLICT');
+      expect(res.body.details?.conflictRange).toBeDefined();
+      expect(res.body.details?.nextAvailableDate).toBeDefined();
+    });
   });
 
   describe('GET /api/v1/bookings/my', () => {
@@ -89,6 +262,27 @@ describe('Bookings Module', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.bookings).toBeInstanceOf(Array);
       expect(res.body.results).toBeGreaterThan(0);
+    });
+  });
+
+  describe('GET /api/v1/bookings/car/:carId', () => {
+    it('should return booked dates for a car', async () => {
+      await createTestBooking(car.id, user.id, {
+        start_date: '2026-12-01',
+        end_date: '2026-12-05',
+        status: 'confirmed'
+      });
+
+      const res = await request(app)
+        .get(`/api/v1/bookings/car/${car.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.dates).toBeInstanceOf(Array);
+      expect(res.body.data.dates.length).toBeGreaterThan(0);
+      expect(res.body.data.dates[0]).toHaveProperty('start_date');
+      expect(res.body.data.dates[0]).toHaveProperty('end_date');
+      expect(res.body.data.dates[0]).toHaveProperty('status');
     });
   });
 });

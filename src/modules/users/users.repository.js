@@ -12,7 +12,13 @@ class UserRepository {
   }
 
   async update(id, data) {
-    const { name, phone, is_verified, license_image_url } = data;
+    const { 
+      name = null, 
+      phone = null, 
+      is_verified = null, 
+      license_image_url = null 
+    } = data;
+    
     const result = await pool.query(
       `UPDATE users 
        SET name = COALESCE($1, name), 

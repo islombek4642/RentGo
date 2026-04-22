@@ -42,15 +42,15 @@ export const runSeedData = async (pool) => {
     const carCheck = await pool.query('SELECT COUNT(*) FROM cars');
     if (parseInt(carCheck.rows[0].count) === 0) {
       const cars = [
-        { brand: 'Chevrolet', model: 'Malibu', year: 2023, price: 500000, location: 'Tashkent' },
-        { brand: 'Chevrolet', model: 'Tracker', year: 2022, price: 400000, location: 'Samarkand' },
-        { brand: 'Kia', model: 'K5', year: 2023, price: 600000, location: 'Tashkent' },
+        { brand: 'Chevrolet', model: 'Malibu', year: 2023, price: 500000, location: 'Tashkent', region_id: 11, district_id: 198 },
+        { brand: 'Chevrolet', model: 'Tracker', year: 2022, price: 400000, location: 'Samarkand', region_id: 8, district_id: 147 },
+        { brand: 'Kia', model: 'K5', year: 2023, price: 600000, location: 'Tashkent', region_id: 11, district_id: 198 },
       ];
 
       for (const car of cars) {
         await pool.query(
-          'INSERT INTO cars (owner_id, brand, model, year, price_per_day, location) VALUES ($1, $2, $3, $4, $5, $6)',
-          [adminId, car.brand, car.model, car.year, car.price, car.location]
+          'INSERT INTO cars (owner_id, brand, model, year, price_per_day, location, region_id, district_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+          [adminId, car.brand, car.model, car.year, car.price, car.location, car.region_id, car.district_id]
         );
       }
       logger.info('Sample cars created.');

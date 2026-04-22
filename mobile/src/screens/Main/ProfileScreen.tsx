@@ -71,7 +71,7 @@ const ProfileScreen = ({ navigation }: any) => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.All, // Using All or Images
       allowsEditing: true,
       quality: 0.7,
     });
@@ -80,11 +80,15 @@ const ProfileScreen = ({ navigation }: any) => {
       const selectedImage = result.assets[0];
       const formData = new FormData();
       
+      const uriParts = selectedImage.uri.split('.');
+      const fileType = uriParts[uriParts.length - 1];
+      const fileName = selectedImage.fileName || `license.${fileType}`;
+
       // @ts-ignore
       formData.append('license', {
         uri: selectedImage.uri,
-        type: 'image/jpeg',
-        name: 'license.jpg',
+        type: selectedImage.mimeType || `image/${fileType}`,
+        name: fileName,
       });
 
       try {

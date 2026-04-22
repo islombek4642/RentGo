@@ -33,12 +33,14 @@ export const createTestCar = async (ownerId, data = {}) => {
     year = 2023,
     price_per_day = 500000,
     location = 'Tashkent',
+    region_id = 1,
+    district_id = 1,
     is_available = true
   } = data;
 
   const result = await pool.query(
-    'INSERT INTO cars (owner_id, brand, model, year, price_per_day, location, is_available) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-    [ownerId, brand, model, year, price_per_day, location, is_available]
+    'INSERT INTO cars (owner_id, brand, model, year, price_per_day, location, region_id, district_id, is_available) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+    [ownerId, brand, model, year, price_per_day, location, region_id, district_id, is_available]
   );
   
   return result.rows[0];

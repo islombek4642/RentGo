@@ -190,16 +190,9 @@ export const setupDatabase = async () => {
     }
 
     // 3) Idempotent Seeding Check for users and cars
-    const userCountResult = await pool.query('SELECT COUNT(*) FROM users');
-    const userCount = parseInt(userCountResult.rows[0].count);
-
-    if (userCount === 0) {
-      logger.info('Database is empty. Initiating seed process...');
-      await runSeedData(pool);
-      logger.info('Automated seeding completed successfully! 🌱');
-    } else {
-      logger.info('Database already contains data. Skipping auto-seed.');
-    }
+    logger.info('Running idempotent seeding check...');
+    await runSeedData(pool);
+    logger.info('Seeding check completed! ✅');
 
     logger.info('Database initialization finished! ✅');
   } catch (error) {

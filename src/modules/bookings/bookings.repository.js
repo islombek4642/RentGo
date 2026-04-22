@@ -1,4 +1,5 @@
 import pool from '../../config/db.js';
+import { formatDateLocal } from '../../utils/date-utils.js';
 
 class BookingRepository {
   async findAllByUser(userId) {
@@ -40,18 +41,20 @@ class BookingRepository {
   }
 
   async findOverlapping(carId, startDate, endDate, excludeBookingId = null) {
-    // Convert to YYYY-MM-DD format if Date objects
-    const start = startDate instanceof Date ? startDate.toISOString().split('T')[0] : startDate;
-    const end = endDate instanceof Date ? endDate.toISOString().split('T')[0] : endDate;
+    const start = formatDateLocal(startDate);
+    const end = formatDateLocal(endDate);
     
-    console.log('[OVERLAP CHECK]', { carId, start, end, excludeBookingId });
+    console.log(`[OVERLAP CHECK] car=${carId} requested=[${start}, ${end}) excludeId=${excludeBookingId || 'none'}`);
     
+    // Half-open interval overlap: two ranges [A_start, A_end) and [B_start, B_end) overlap
+    // if and only if A_start < B_end AND A_end > B_start.
+    // This means bookings that touch at a boundary (end === start) do NOT overlap.
     let query = `
        SELECT *, start_date::date as start_d, end_date::date as end_d FROM bookings 
        WHERE car_id = $1 
        AND status IN ('pending', 'confirmed', 'in_progress')
-       AND start_date::date <= $3::date 
-       AND end_date::date >= $2::date
+       AND start_date::date < $3::date 
+       AND end_date::date > $2::date
     `;
     const params = [carId, start, end];
 
@@ -61,9 +64,9 @@ class BookingRepository {
     }
 
     const result = await pool.query(query, params);
-    console.log('[OVERLAP FOUND]', result.rows.length, 'bookings');
+    console.log(`[OVERLAP RESULT] ${result.rows.length} conflicting booking(s) found`);
     result.rows.forEach(r => {
-      console.log(`  - Booking ${r.id}: ${r.start_d} to ${r.end_d} (status: ${r.status})`);
+      console.log(`  - Booking ${r.id}: [${formatDateLocal(r.start_d)}, ${formatDateLocal(r.end_d)}) status=${r.status}`);
     });
     return result.rows;
   }

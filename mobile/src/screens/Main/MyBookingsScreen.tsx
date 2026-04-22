@@ -17,6 +17,7 @@ import EmptyState from '../../components/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { Calendar, Clock, AlertCircle, ChevronRight, Trash2, Star, CheckCircle2 } from 'lucide-react-native';
 import { toast } from '../../utils/toast';
+import { formatDateLocal } from '../../utils/date';
 
 export default function MyBookingsScreen({ navigation }: any) {
   const { t } = useTranslation();
@@ -97,10 +98,7 @@ export default function MyBookingsScreen({ navigation }: any) {
     const carName = item.brand && item.model ? `${item.brand} ${item.model}` : t('car.not_available');
 
     const formatDate = (dateStr: string) => {
-      if (!dateStr) return '';
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return dateStr;
-      return date.toLocaleDateString();
+      return formatDateLocal(dateStr);
     };
 
     return (

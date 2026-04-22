@@ -66,10 +66,25 @@ beforeAll(async () => {
       await pool.query(statement);
     }
   }
+
+  // Ensure the check_dates constraint uses strict > (half-open interval model)
+  try {
+    await pool.query(`ALTER TABLE bookings DROP CONSTRAINT IF EXISTS check_dates`);
+    await pool.query(`ALTER TABLE bookings ADD CONSTRAINT check_dates CHECK (end_date > start_date)`);
+  } catch (e) {
+    // Constraint already correct, ignore
+  }
+
+  // Seed basic locations for tests
+  await pool.query(`
+    INSERT INTO regions (id, name_uz) VALUES (1, 'Test Region') ON CONFLICT (id) DO NOTHING;
+    INSERT INTO districts (id, region_id, name_uz) VALUES (1, 1, 'Test District') ON CONFLICT (id) DO NOTHING;
+  `);
 });
 
 beforeEach(async () => {
   // Truncate tables and restart identity to ensure clean slate for every test file
+  // We don't truncate regions/districts as they are static lookup data
   await pool.query('TRUNCATE TABLE users, cars, bookings, refresh_tokens RESTART IDENTITY CASCADE');
 });
 

@@ -21,7 +21,9 @@ describe('Cars Module', () => {
         model: 'Song Plus',
         year: 2024,
         price_per_day: 700000,
-        location: 'Tashkent'
+        location: 'Tashkent',
+        region_id: 1,
+        district_id: 1
       };
 
       const res = await request(app)

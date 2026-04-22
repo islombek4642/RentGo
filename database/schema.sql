@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'in_progress', 'cancelled', 'completed')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT check_dates CHECK (end_date >= start_date)
+    CONSTRAINT check_dates CHECK (end_date > start_date)
 );
 
 -- Refresh Tokens Table

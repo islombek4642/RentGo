@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CheckCircle2, Home } from 'lucide-react-native';
 import { COLORS, TYPOGRAPHY, SPACING, SIZES } from '../../constants/theme';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';

@@ -3,6 +3,7 @@ import path from 'path';
 import { config } from '../config/env.js';
 import AppError from '../utils/AppError.js';
 import fs from 'fs';
+import { t } from '../utils/i18n.js';
 import { SYSTEM_CONFIG } from '../constants/index.js';
 
 // Ensure upload directory exists
@@ -21,11 +22,16 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  // Allow only images
-  if (file.mimetype.startsWith('image/')) {
+  const allowedExtensions = /jpeg|jpg|png/;
+  const allowedMimetypes = /image\/jpeg|image\/jpg|image\/png/;
+
+  const extension = allowedExtensions.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedMimetypes.test(file.mimetype);
+
+  if (extension && mimetype) {
     cb(null, true);
   } else {
-    cb(new AppError('Only image files are allowed!', 400), false);
+    cb(new AppError(t(req.lang, 'profile.upload_invalid_type') || 'Only .png, .jpg and .jpeg format allowed!', 400), false);
   }
 };
 
