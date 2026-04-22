@@ -27,7 +27,8 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^14.0.0",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "z-schema": "^5.0.5"
   },
   "devDependencies": {
     "@jest/globals": "^30.3.0",
@@ -38,9 +39,6 @@
     "typescript": "~6.0.3"
   },
   "overrides": {
-    "inflight": "1.0.6",
-    "lodash.get": "^4.4.2",
-    "lodash.isequal": "^4.5.0",
     "glob": "^13.0.6"
   }
 }
