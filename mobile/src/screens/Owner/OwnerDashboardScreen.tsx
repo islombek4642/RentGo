@@ -21,7 +21,8 @@ import {
   ChevronLeft,
   DollarSign,
   User,
-  Phone
+  Phone,
+  Timer
 } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY, SIZES, SHADOWS } from '../../constants/theme';
 import api from '../../services/api';
@@ -39,6 +40,8 @@ export default function OwnerDashboardScreen({ navigation }: any) {
   const [bookings, setBookings] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
+  // Double-action protection: track loading state per booking
+  const [updatingStatus, setUpdatingStatus] = React.useState<Record<string, boolean>>({});
 
   const fetchBookings = React.useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -64,6 +67,10 @@ export default function OwnerDashboardScreen({ navigation }: any) {
   };
 
   const handleUpdateStatus = async (bookingId: string, status: string) => {
+    // Double-action protection
+    if (updatingStatus[bookingId]) return;
+    
+    setUpdatingStatus(prev => ({ ...prev, [bookingId]: true }));
     try {
       await api.patch(`/bookings/${bookingId}/status`, { status });
       toast.success(t(`status.${status}`));
@@ -71,6 +78,8 @@ export default function OwnerDashboardScreen({ navigation }: any) {
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || t('common.error_occurred');
       toast.error(errorMsg);
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [bookingId]: false }));
     }
   };
 
@@ -107,7 +116,19 @@ export default function OwnerDashboardScreen({ navigation }: any) {
     </View>
   );
 
-  const renderBookingItem = ({ item }: { item: any }) => (
+  // Calculate hours remaining for pending bookings (12h timeout)
+  const getHoursRemaining = (createdAt: string) => {
+    const created = new Date(createdAt).getTime();
+    const now = Date.now();
+    const hoursElapsed = (now - created) / (1000 * 60 * 60);
+    const hoursRemaining = Math.max(0, 12 - hoursElapsed);
+    return Math.ceil(hoursRemaining);
+  };
+
+  const renderBookingItem = ({ item }: { item: any }) => {
+    const hoursRemaining = item.status === 'pending' ? getHoursRemaining(item.created_at) : 0;
+    
+    return (
     <View style={styles.bookingCard}>
       <View style={styles.bookingHeader}>
         <View>
@@ -125,6 +146,19 @@ export default function OwnerDashboardScreen({ navigation }: any) {
           </Text>
         </View>
       </View>
+
+      {/* Pending Timeout Warning */}
+      {item.status === 'pending' && hoursRemaining <= 12 && (
+        <View style={styles.pendingWarning}>
+          <Timer size={16} color={hoursRemaining <= 3 ? COLORS.error : COLORS.warning} />
+          <Text style={[styles.pendingText, { color: hoursRemaining <= 3 ? COLORS.error : COLORS.warning }]}>
+            {hoursRemaining > 0 
+              ? `${t('owner.expires_in')} ${hoursRemaining} ${t('owner.hours')}`
+              : t('owner.waiting_response')
+            }
+          </Text>
+        </View>
+      )}
 
       <View style={styles.renterSection}>
         <View style={styles.renterInfo}>
@@ -145,24 +179,36 @@ export default function OwnerDashboardScreen({ navigation }: any) {
       <View style={styles.actionSection}>
         {item.status === 'pending' && (
           <>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.rejectButton]} 
-              onPress={() => handleUpdateStatus(item.id, 'rejected')}
-            >
-              <Text style={styles.rejectButtonText}>{t('booking.reject')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.acceptButton]} 
-              onPress={() => handleUpdateStatus(item.id, 'confirmed')}
-            >
-              <Text style={styles.acceptButtonText}>{t('booking.accept')}</Text>
-            </TouchableOpacity>
+            {/* Auto expire note */}
+            {hoursRemaining <= 3 && (
+              <View style={styles.expireNote}>
+                <Text style={styles.expireText}>{t('owner.auto_expire_note')}</Text>
+              </View>
+            )}
+            <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.rejectButton, updatingStatus[item.id] && styles.disabledButton]} 
+                onPress={() => handleUpdateStatus(item.id, 'rejected')}
+                disabled={updatingStatus[item.id]}
+              >
+                <Text style={styles.rejectButtonText}>{t('booking.reject')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.acceptButton, updatingStatus[item.id] && styles.disabledButton]} 
+                onPress={() => handleUpdateStatus(item.id, 'confirmed')}
+                disabled={updatingStatus[item.id]}
+              >
+                <Text style={styles.acceptButtonText}>{t('booking.accept')}</Text>
+              </TouchableOpacity>
+            </View>
           </>
         )}
         {item.status === 'confirmed' && (
           <Button 
             title={t('booking.start_trip')} 
             onPress={() => handleUpdateStatus(item.id, 'in_progress')}
+            loading={updatingStatus[item.id]}
+            disabled={updatingStatus[item.id]}
           />
         )}
         {item.status === 'in_progress' && (
@@ -170,11 +216,14 @@ export default function OwnerDashboardScreen({ navigation }: any) {
             title={t('booking.complete_trip')} 
             onPress={() => handleUpdateStatus(item.id, 'completed')}
             variant="outline"
+            loading={updatingStatus[item.id]}
+            disabled={updatingStatus[item.id]}
           />
         )}
       </View>
     </View>
   );
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -463,5 +512,39 @@ const styles = StyleSheet.create({
   acceptButtonText: {
     color: COLORS.white,
     fontWeight: '600',
+  },
+  // NEW: Pending timeout styles
+  pendingWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.warning + '10',
+    padding: SPACING.sm,
+    borderRadius: SIZES.radius.md,
+    marginBottom: SPACING.md,
+    gap: SPACING.sm,
+  },
+  pendingText: {
+    ...TYPOGRAPHY.body2,
+    fontWeight: '600',
+  },
+  expireNote: {
+    backgroundColor: COLORS.error + '10',
+    padding: SPACING.sm,
+    borderRadius: SIZES.radius.md,
+    marginBottom: SPACING.sm,
+    width: '100%',
+  },
+  expireText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.error,
+    textAlign: 'center',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    flex: 1,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });

@@ -32,7 +32,11 @@ export default function HomeScreen({ navigation }: any) {
   const [refreshing, setRefreshing] = React.useState(false);
   const [regions, setRegions] = React.useState<any[]>([]);
   const [selectedRegionId, setSelectedRegionId] = React.useState<number | 'All'>('All');
+  // NEW: Car type filter
+  const [selectedCarType, setSelectedCarType] = React.useState<string>('all');
   const [hasError, setHasError] = React.useState(false);
+  // AbortController ref for cancelling requests on unmount
+  const abortControllerRef = React.useRef<AbortController | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [tempSearch, setTempSearch] = React.useState('');
 
@@ -50,12 +54,27 @@ export default function HomeScreen({ navigation }: any) {
       if (searchQuery.trim().length > 0) {
         url += `&search=${encodeURIComponent(searchQuery.trim())}`;
       }
+      // NEW: Car type filter
+      if (selectedCarType !== 'all') {
+        url += `&car_type=${selectedCarType}`;
+      }
 
-      const response = await api.get(url);
+      // Cancel previous request if exists
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      
+      const response = await api.get(url, {
+        signal: abortControllerRef.current.signal
+      });
       setCars(response.data.data.cars);
-    } catch (error) {
-      console.error('Error fetching cars:', error);
-      setHasError(true);
+    } catch (error: any) {
+      // Don't log CanceledError - these are intentional from AbortController
+      if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
+        console.error('Error fetching cars:', error);
+        setHasError(true);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -66,6 +85,13 @@ export default function HomeScreen({ navigation }: any) {
   React.useEffect(() => {
     fetchRegions();
     fetchCars(false, true);
+    
+    // Cleanup: abort any pending requests on unmount
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const fetchRegions = async () => {
@@ -96,7 +122,7 @@ export default function HomeScreen({ navigation }: any) {
   React.useEffect(() => {
     // Skip initial render, only update when filters actually change
     fetchCars(false, true);
-  }, [selectedRegionId, searchQuery]);
+  }, [selectedRegionId, searchQuery, selectedCarType]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -167,6 +193,48 @@ export default function HomeScreen({ navigation }: any) {
                 ]}
               >
                 {getLocalizedName(region)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* NEW: Car Type Filter */}
+      <View style={[styles.filterContainer, { marginTop: SPACING.sm }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <TouchableOpacity 
+            style={[
+              styles.typeTab,
+              selectedCarType === 'all' && styles.selectedTypeTab
+            ]}
+            onPress={() => setSelectedCarType('all')}
+          >
+            <Text 
+              style={[
+                styles.typeText,
+                selectedCarType === 'all' && styles.selectedTypeText
+              ]}
+            >
+              {t('filters.all_types')}
+            </Text>
+          </TouchableOpacity>
+          
+          {['economy', 'standard', 'suv', 'luxury'].map((type) => (
+            <TouchableOpacity 
+              key={type}
+              style={[
+                styles.typeTab,
+                selectedCarType === type && styles.selectedTypeTab
+              ]}
+              onPress={() => setSelectedCarType(type)}
+            >
+              <Text 
+                style={[
+                  styles.typeText,
+                  selectedCarType === type && styles.selectedTypeText
+                ]}
+              >
+                {t(`filters.${type}`)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -319,6 +387,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   selectedTabText: {
+    color: COLORS.white,
+  },
+  // NEW: Car type filter styles
+  typeTab: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: SIZES.radius.full,
+    backgroundColor: COLORS.white,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: COLORS.gray[200],
+  },
+  selectedTypeTab: {
+    backgroundColor: COLORS.success,
+    borderColor: COLORS.success,
+  },
+  typeText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.text.secondary,
+    fontWeight: '600',
+  },
+  selectedTypeText: {
     color: COLORS.white,
   },
   emptyContainer: {

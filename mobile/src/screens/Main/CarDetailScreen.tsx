@@ -28,7 +28,9 @@ import {
   Calendar,
   ShieldCheck,
   AlertCircle,
-  Star 
+  Star,
+  User,
+  CheckCircle2
 } from 'lucide-react-native';
 
 import { useTranslation } from 'react-i18next';
@@ -153,6 +155,54 @@ export default function CarDetailScreen({ route, navigation }: Props) {
 
           <View style={styles.divider} />
 
+          {/* Owner Info Section */}
+          <View style={styles.ownerSection}>
+            <Text style={styles.sectionTitle}>{t('car.owner_title')}</Text>
+            <View style={styles.ownerCard}>
+              <View style={styles.ownerHeader}>
+                <View style={styles.ownerAvatar}>
+                  <User size={24} color={COLORS.primary} />
+                </View>
+                <View style={styles.ownerInfo}>
+                  <View style={styles.ownerNameRow}>
+                    <Text style={styles.ownerName}>{car.owner_name || t('common.user')}</Text>
+                    {car.owner_verified && (
+                      <View style={styles.verifiedBadge}>
+                        <CheckCircle2 size={12} color={COLORS.success} />
+                        <Text style={styles.verifiedText}>{t('profile.verified')}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.ownerRatingRow}>
+                    <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
+                    <Text style={styles.ownerRatingText}>
+                      {parseFloat(car.owner_rating || 0).toFixed(1)}
+                    </Text>
+                    <Text style={styles.ownerReviewCount}>
+                      ({car.owner_review_count || 0} {t('review.reviews_title')})
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              
+              {parseFloat(car.owner_rating || 0) >= 4.5 && (
+                <View style={styles.topRatedBadge}>
+                  <Star size={14} color={COLORS.white} fill={COLORS.white} />
+                  <Text style={styles.topRatedText}>{t('owner.top_rated')}</Text>
+                </View>
+              )}
+              
+              {!car.owner_verified && (
+                <View style={styles.unverifiedWarning}>
+                  <AlertCircle size={16} color={COLORS.warning} />
+                  <Text style={styles.unverifiedText}>{t('car.owner_not_verified')}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
           {/* Specs Section */}
           <Text style={styles.sectionTitle}>{t('car.specifications')}</Text>
           <View style={styles.specsGrid}>
@@ -168,7 +218,7 @@ export default function CarDetailScreen({ route, navigation }: Props) {
                 <Fuel size={20} color={COLORS.primary} />
               </View>
               <Text style={styles.specLabel}>{t('car.fuel')}</Text>
-              <Text style={styles.specValue}>{t('car.electric')}</Text>
+              <Text style={styles.specValue}>{t(`car.fuel_${car.fuel_type || 'petrol'}`)}</Text>
             </View>
             <View style={styles.specItem}>
               <View style={styles.iconBox}>
@@ -182,19 +232,32 @@ export default function CarDetailScreen({ route, navigation }: Props) {
           {/* Features Section */}
           <Text style={styles.sectionTitle}>{t('car.features')}</Text>
           <View style={styles.features}>
-            <View style={styles.featureItem}>
-              <ShieldCheck size={18} color={COLORS.success} />
-              <Text style={styles.featureText}>{t('car.insurance')}</Text>
-            </View>
-            <View style={styles.featureItem}>
-              <Calendar size={18} color={COLORS.success} />
-              <Text style={styles.featureText}>{t('car.instant')}</Text>
-            </View>
+            {/* Dynamic features from car data */}
+            {car.features && Array.isArray(car.features) && car.features.length > 0 ? (
+              car.features.map((feature: string, index: number) => (
+                <View key={index} style={styles.featureItem}>
+                  <ShieldCheck size={18} color={COLORS.success} />
+                  <Text style={styles.featureText}>{feature}</Text>
+                </View>
+              ))
+            ) : (
+              // Default features if none provided
+              <>
+                <View style={styles.featureItem}>
+                  <ShieldCheck size={18} color={COLORS.success} />
+                  <Text style={styles.featureText}>{t('car.insurance')}</Text>
+                </View>
+                <View style={styles.featureItem}>
+                  <Calendar size={18} color={COLORS.success} />
+                  <Text style={styles.featureText}>{t('car.instant')}</Text>
+                </View>
+              </>
+            )}
           </View>
 
           <Text style={styles.sectionTitle}>{t('car.description_title')}</Text>
           <Text style={styles.description}>
-            {t('car.description_template', { 
+            {car.description || t('car.description_template', { 
               brand: car.brand, 
               model: car.model, 
               location: car.location 
@@ -443,6 +506,104 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: SPACING.lg,
+  },
+  ownerSection: {
+    marginBottom: SPACING.md,
+  },
+  ownerCard: {
+    backgroundColor: COLORS.gray[50],
+    borderRadius: SIZES.radius.lg,
+    padding: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.gray[100],
+  },
+  ownerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ownerAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ownerInfo: {
+    flex: 1,
+    marginLeft: SPACING.md,
+  },
+  ownerNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginBottom: 4,
+  },
+  ownerName: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.text.primary,
+    marginRight: SPACING.sm,
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.success + '15',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    gap: 4,
+  },
+  verifiedText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.success,
+    fontWeight: '600',
+    fontSize: 10,
+  },
+  ownerRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ownerRatingText: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.text.primary,
+    fontWeight: '700',
+    marginLeft: 4,
+  },
+  ownerReviewCount: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.gray[500],
+    marginLeft: 4,
+  },
+  topRatedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.warning,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: SIZES.radius.sm,
+    alignSelf: 'flex-start',
+    gap: 4,
+    marginTop: SPACING.sm,
+  },
+  topRatedText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.white,
+    fontWeight: '700',
+    fontSize: 11,
+  },
+  unverifiedWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.warning + '10',
+    padding: SPACING.md,
+    borderRadius: SIZES.radius.md,
+    marginTop: SPACING.md,
+    gap: 8,
+  },
+  unverifiedText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.warning,
+    flex: 1,
   },
   footer: {
     position: 'absolute',

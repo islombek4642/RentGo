@@ -48,6 +48,13 @@ CREATE TABLE IF NOT EXISTS cars (
     location VARCHAR(255) NOT NULL,
     is_available BOOLEAN DEFAULT TRUE,
     image_url TEXT,
+    -- NEW: Enhanced car details
+    description TEXT,
+    features JSONB DEFAULT '[]',
+    car_type VARCHAR(50) DEFAULT 'economy' CHECK (car_type IN ('economy', 'standard', 'luxury', 'suv', 'minivan')),
+    fuel_type VARCHAR(50) DEFAULT 'petrol' CHECK (fuel_type IN ('petrol', 'diesel', 'electric', 'hybrid')),
+    transmission VARCHAR(50) DEFAULT 'automatic' CHECK (transmission IN ('automatic', 'manual')),
+    seats INTEGER DEFAULT 5,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -60,7 +67,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'in_progress', 'cancelled', 'completed')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'in_progress', 'cancelled', 'rejected', 'completed')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT check_dates CHECK (end_date > start_date)

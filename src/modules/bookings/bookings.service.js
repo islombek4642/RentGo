@@ -37,7 +37,8 @@ class BookingService {
       const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
       // 3) Check for overlaps - use date-only strings
-      const overlaps = await bookingRepository.findOverlapping(car_id, startStr, endStr);
+      // CRITICAL: Pass transaction client to enable FOR UPDATE row locking
+      const overlaps = await bookingRepository.findOverlapping(car_id, startStr, endStr, null, client);
       if (overlaps.length > 0) {
         
         // Calculate Next Available Date
@@ -111,6 +112,32 @@ class BookingService {
     return await bookingRepository.findAllByOwner(ownerId);
   }
 
+  async getBookingById(bookingId, userId, userRole, lang) {
+    const booking = await bookingRepository.findByIdWithDetails(bookingId);
+    if (!booking) {
+      throw new AppError(t(lang, 'booking.not_found'), HTTP_STATUS.NOT_FOUND);
+    }
+
+    // Check permissions - only owner, renter, or admin can view
+    const car = await carService.getCar(booking.car_id, lang);
+    const isOwner = car.owner_id === userId;
+    const isRenter = booking.user_id === userId;
+    const isAdmin = userRole === 'admin';
+
+    if (!isOwner && !isRenter && !isAdmin) {
+      throw new AppError(t(lang, 'common.forbidden'), HTTP_STATUS.FORBIDDEN);
+    }
+
+    // Add owner info from car query
+    booking.owner_name = car.owner_name;
+    booking.owner_phone = car.owner_phone;
+    booking.owner_verified = car.owner_verified;
+    booking.owner_rating = car.owner_rating;
+    booking.owner_review_count = car.owner_review_count;
+
+    return booking;
+  }
+
   async updateBookingStatus(bookingId, userId, newStatus, userRole, lang) {
     const booking = await bookingRepository.findById(bookingId);
     if (!booking) throw new AppError(t(lang, 'booking.not_found'), HTTP_STATUS.NOT_FOUND);
@@ -146,8 +173,11 @@ class BookingService {
     // Trust System: Cancellation Policy Enforcement
     if (newStatus === BOOKING_STATUS.CANCELLED && !isAdmin) {
       if (currentStatus === BOOKING_STATUS.CONFIRMED) {
+        // Normalize both dates to midnight to avoid timezone drift
         const now = new Date();
+        now.setHours(0, 0, 0, 0);
         const startTime = new Date(booking.start_date);
+        startTime.setHours(0, 0, 0, 0);
         const diffHours = (startTime - now) / (1000 * 60 * 60);
 
         if (diffHours < 24) {
@@ -177,7 +207,8 @@ class BookingService {
         throw new AppError(t(lang, 'booking.invalid_dates') || 'End date must be after start date', HTTP_STATUS.BAD_REQUEST);
       }
 
-      const overlaps = await bookingRepository.findOverlapping(booking.car_id, newStartDate, newEndDate, bookingId);
+      // CRITICAL: Pass transaction client to enable FOR UPDATE row locking
+      const overlaps = await bookingRepository.findOverlapping(booking.car_id, newStartDate, newEndDate, bookingId, client);
       if (overlaps.length > 0) {
         throw new AppError(t(lang, 'booking.overlap'), HTTP_STATUS.BAD_REQUEST, { code: 'BOOKING_CONFLICT' });
       }

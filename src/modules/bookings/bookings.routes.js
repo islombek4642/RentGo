@@ -129,6 +129,48 @@ router.get('/my', bookingController.getMyBookings);
 
 /**
  * @swagger
+ * /bookings/{id}:
+ *   get:
+ *     summary: Get a single booking by ID
+ *     description: Returns detailed booking information including car and owner details
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Booking UUID
+ *     responses:
+ *       200:
+ *         description: Booking details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     booking:
+ *                       $ref: '#/components/schemas/Booking'
+ *       404:
+ *         description: Booking not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/:id', bookingController.getBookingById);
+
+/**
+ * @swagger
  * /bookings/car/{carId}:
  *   get:
  *     summary: Get upcoming booked dates for a specific car

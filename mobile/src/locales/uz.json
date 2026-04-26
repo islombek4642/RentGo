@@ -15,8 +15,6 @@
     "network_error": "Tarmoq xatosi. Aloqani tekshiring.",
     "go_home": "Asosiyga qaytish",
     "details": "Batafsil",
-    "retry": "Qayta urinish",
-    "retry_message": "Nimadir xato ketdi. Iltimos, aloqani tekshiring.",
     "error_occurred": "Xatolik yuz berdi",
     "all": "Barchasi",
     "user": "Foydalanuvchi",
@@ -29,7 +27,9 @@
     "total_cars": "{{count}} ta mashina",
     "confirm_delete_msg": "Haqiqatan ham ushbu e'lonni o'chirmoqchimisiz?",
     "confirm_delete_message": "Haqiqatan ham ushbu e'lonni o'chirmoqchimisiz?",
-    "currency": "so'm"
+    "permission_denied": "Ruxsat rad etildi",
+    "currency": "so'm",
+    "not_available": "Mavjud emas"
   },
   "nav": {
     "home": "Asosiy",
@@ -73,6 +73,7 @@
   "car": {
     "view": "Ko'rish",
     "book_now": "Band qilish",
+    "details": "Tafsilotlar",
     "brand": "Brend",
     "model_label": "Model",
     "price": "Kunlik narx (so'm)",
@@ -94,7 +95,13 @@
     "placeholder_model": "masalan, Malibu",
     "placeholder_year": "2024",
     "placeholder_price": "500000",
-    "placeholder_location": "masalan, Toshkent"
+    "placeholder_location": "masalan, Toshkent",
+    "owner_title": "Ega ma'lumotlari",
+    "owner_not_verified": "Ega hali tasdiqlanmagan. Ehtiyot bo'ling.",
+    "fuel_petrol": "Benzin",
+    "fuel_diesel": "Dizel",
+    "fuel_electric": "Elektr",
+    "fuel_hybrid": "Gibrid"
   },
   "booking": {
     "title": "Band qilish tafsilotlari",
@@ -124,7 +131,19 @@
     "renter_info": "Ijarachi ma'lumotlari",
     "cancel": "Buyurtmani bekor qilish",
     "cancel_confirm": "Haqiqatan ham ushbu buyurtmani bekor qilmoqchimisiz?",
-    "error_cancel_deadline": "Bekor qilish imkonsiz: boshlanishiga 24 soatdan kam vaqt qoldi."
+    "error_cancel_deadline": "Bekor qilish imkonsiz: boshlanishiga 24 soatdan kam vaqt qoldi.",
+    "waiting_owner": "Egadan javob kutilmoqda",
+    "waiting_owner_title": "Kutilmoqda",
+    "waiting_owner_message": "Sizning buyurtmangiz egaga yuborildi. Iltimos, tasdiqlashini kuting.",
+    "auto_cancel_note": "Agar 12 soat ichida javob berilmasa, buyurtma avtomatik bekor qilinadi.",
+    "confirmed_by_owner": "Ega tomonidan tasdiqlandi",
+    "trip_in_progress": "Sayohat davom etmoqda",
+    "trip_completed": "Sayohat yakunlandi",
+    "cancelled_message": "Buyurtma bekor qilingan",
+    "rejected_by_owner": "Ega tomonidan rad etildi",
+    "owner_info": "Ega ma'lumotlari",
+    "owner_not_verified_warning": "Bu ega hali tasdiqlanmagan. Ijara olishdan oldin ehtiyot bo'ling.",
+    "top_rated": "Top egasi"
   },
   "profile": {
     "my_bookings": "Mening buyurtmalarim",
@@ -172,7 +191,12 @@
     "add_first_car": "Birinchi mashinangizni qo'shing",
     "dashboard_intro_title": "Ijara orqali daromad oling",
     "dashboard_intro_desc": "Mashinangizni ijaraga berib pul ishlashni xohlaysizmi? Hoziroq ro'yxatdan o'tkazing.",
-    "start_listing": "Mashina qo'shish"
+    "start_listing": "Mashina qo'shish",
+    "top_rated": "Top egasi",
+    "waiting_response": "Javob kutilmoqda",
+    "expires_in": "Muddati tugashiga",
+    "hours": "soat",
+    "auto_expire_note": "Agar 12 soat ichida javob bermasangiz, so'rov avtomatik bekor qilinadi."
   },
   "review": {
     "title": "Fikr qoldirish",
@@ -188,6 +212,14 @@
   },
   "filters": {
     "region": "Viloyat",
-    "district": "Tuman"
+    "district": "Tuman",
+    "price_range": "Narx oralig'i",
+    "car_type": "Mashina turi",
+    "all_types": "Barcha turlar",
+    "economy": "Ekonom",
+    "standard": "Standart",
+    "luxury": "Lyuks",
+    "suv": "SUV",
+    "minivan": "Minivan"
   }
 }

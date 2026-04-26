@@ -4,10 +4,12 @@ import { formatDateLocal } from '../../utils/date-utils.js';
 class BookingRepository {
   async findAllByUser(userId) {
     const result = await pool.query(
-      `SELECT b.*, c.brand, c.model, 
+      `SELECT b.*, c.brand, c.model, c.image_url as car_image, c.price_per_day,
+              u.name as owner_name, u.phone as owner_phone, u.is_verified as owner_verified,
               (SELECT COUNT(*) > 0 FROM reviews r WHERE r.booking_id = b.id AND r.reviewer_id = $1) as has_review
        FROM bookings b 
        JOIN cars c ON b.car_id = c.id 
+       JOIN users u ON c.owner_id = u.id
        WHERE b.user_id = $1 
        ORDER BY b.created_at DESC`,
       [userId]
@@ -17,7 +19,25 @@ class BookingRepository {
 
   async findById(id) {
     const result = await pool.query(
-      'SELECT * FROM bookings WHERE id = $1',
+      `SELECT b.*, c.brand, c.model, c.image_url as car_image, c.price_per_day,
+              u.name as renter_name, u.phone as renter_phone, u.is_verified as renter_verified
+       FROM bookings b
+       JOIN cars c ON b.car_id = c.id
+       JOIN users u ON b.user_id = u.id
+       WHERE b.id = $1`,
+      [id]
+    );
+    return result.rows[0];
+  }
+
+  async findByIdWithDetails(id) {
+    const result = await pool.query(
+      `SELECT b.*, c.brand, c.model, c.image_url as car_image, c.price_per_day, c.owner_id,
+              u.name as renter_name, u.phone as renter_phone, u.is_verified as renter_verified
+       FROM bookings b
+       JOIN cars c ON b.car_id = c.id
+       JOIN users u ON b.user_id = u.id
+       WHERE b.id = $1`,
       [id]
     );
     return result.rows[0];
@@ -40,7 +60,7 @@ class BookingRepository {
     return result.rows[0];
   }
 
-  async findOverlapping(carId, startDate, endDate, excludeBookingId = null) {
+  async findOverlapping(carId, startDate, endDate, excludeBookingId = null, client = null) {
     const start = formatDateLocal(startDate);
     const end = formatDateLocal(endDate);
     
@@ -49,6 +69,7 @@ class BookingRepository {
     // Half-open interval overlap: two ranges [A_start, A_end) and [B_start, B_end) overlap
     // if and only if A_start < B_end AND A_end > B_start.
     // This means bookings that touch at a boundary (end === start) do NOT overlap.
+    // CRITICAL: FOR UPDATE locks rows to prevent race condition double bookings
     let query = `
        SELECT *, start_date::date as start_d, end_date::date as end_d FROM bookings 
        WHERE car_id = $1 
@@ -62,8 +83,12 @@ class BookingRepository {
       params.push(excludeBookingId);
       query += ` AND id != $${params.length}`;
     }
+    
+    // Add FOR UPDATE to lock rows during transaction (prevents race condition)
+    query += ` FOR UPDATE`;
 
-    const result = await pool.query(query, params);
+    const db = client || pool;
+    const result = await db.query(query, params);
     console.log(`[OVERLAP RESULT] ${result.rows.length} conflicting booking(s) found`);
     result.rows.forEach(r => {
       console.log(`  - Booking ${r.id}: [${formatDateLocal(r.start_d)}, ${formatDateLocal(r.end_d)}) status=${r.status}`);

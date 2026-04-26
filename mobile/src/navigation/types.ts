@@ -15,6 +15,7 @@ export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
   CarDetail: { carId: string };
+  BookingDetail: { bookingId: string };
   BookingConfirm: { carId: string; startDate: string; endDate: string };
   BookingSuccess: { bookingId: string; carName: string; totalPrice: number; dates: string };
   // Owner Screens

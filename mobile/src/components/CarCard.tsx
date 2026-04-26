@@ -7,7 +7,7 @@ import {
   TouchableOpacity 
 } from 'react-native';
 import { COLORS, SPACING, SIZES, TYPOGRAPHY, SHADOWS } from '../constants/theme';
-import { Users, Fuel, MapPin } from 'lucide-react-native';
+import { Users, Fuel, MapPin, ShieldCheck, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import CONFIG from '../constants/config';
 
@@ -19,6 +19,11 @@ interface CarCardProps {
   location: string;
   imageUrl?: string;
   onPress?: () => void;
+  // NEW: Owner info
+  ownerName?: string;
+  ownerVerified?: boolean;
+  ownerRating?: number;
+  ownerReviewCount?: number;
 }
 
 const CarCard: React.FC<CarCardProps> = ({
@@ -28,7 +33,11 @@ const CarCard: React.FC<CarCardProps> = ({
   pricePerDay,
   location,
   imageUrl,
-  onPress
+  onPress,
+  ownerName,
+  ownerVerified,
+  ownerRating,
+  ownerReviewCount
 }) => {
   const { t } = useTranslation();
 
@@ -59,6 +68,26 @@ const CarCard: React.FC<CarCardProps> = ({
           <Text style={styles.title}>{brand} {model}</Text>
           <Text style={styles.year}>{year}</Text>
         </View>
+
+        {/* Owner Info */}
+        {(ownerName || ownerVerified || ownerRating) && (
+          <View style={styles.ownerRow}>
+            <View style={styles.ownerInfo}>
+              {ownerVerified && (
+                <View style={styles.verifiedBadge}>
+                  <ShieldCheck size={12} color={COLORS.success} />
+                  <Text style={styles.verifiedText}>{t('profile.verified')}</Text>
+                </View>
+              )}
+              {(ownerRating && ownerRating > 0) && (
+                <View style={styles.ratingBadge}>
+                  <Star size={12} color={COLORS.warning} fill={COLORS.warning} />
+                  <Text style={styles.ratingText}>{ownerRating.toFixed(1)}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         <View style={styles.details}>
           <View style={styles.detailItem}>
@@ -160,6 +189,47 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.button,
     color: COLORS.white,
     fontSize: 14,
+  },
+  // NEW: Owner info styles
+  ownerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.xs,
+  },
+  ownerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.success + '15',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 2,
+  },
+  verifiedText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.success,
+    fontWeight: '600',
+    fontSize: 9,
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.warning + '15',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 2,
+  },
+  ratingText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.warning,
+    fontWeight: '700',
+    fontSize: 10,
   },
 });
 

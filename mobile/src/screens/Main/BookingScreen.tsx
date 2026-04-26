@@ -57,9 +57,9 @@ export default function BookingScreen({ route, navigation }: Props) {
       // Overlap iff sDate < bEnd AND eDate > bStart
       for (const b of carBookedDates) {
         if (b.status === 'pending') {
-          const bStart = b.start_date;
-          const bEnd = b.end_date;
-          if (startDate < bEnd && endDate > bStart) {
+          const bStart = parseDateLocal(b.start_date);
+          const bEnd = parseDateLocal(b.end_date);
+          if (sDate && eDate && bStart && bEnd && sDate < bEnd && eDate > bStart) {
              pendingMatch = true;
              break;
           }
@@ -69,6 +69,9 @@ export default function BookingScreen({ route, navigation }: Props) {
     setHasPendingOverlap(pendingMatch);
   }, [startDate, endDate, carBookedDates]);
 
+  // AbortController ref for cancelling requests on unmount
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+
   React.useEffect(() => {
     if (!carId) {
       toast.error(t('common.error'), t('car.not_found'));
@@ -77,21 +80,36 @@ export default function BookingScreen({ route, navigation }: Props) {
     }
 
     const fetchData = async () => {
+      // Cancel previous request if exists
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      
       try {
         const [carRes, heatmapRes] = await Promise.all([
-          api.get(`/cars/${carId}`),
-          api.get(`/bookings/car/${carId}`)
+          api.get(`/cars/${carId}`, { signal: abortControllerRef.current.signal }),
+          api.get(`/bookings/car/${carId}`, { signal: abortControllerRef.current.signal })
         ]);
         setCar(carRes.data.data.car);
         setCarBookedDates(heatmapRes.data.data.dates);
-      } catch (error) {
-        Alert.alert(t('common.error'), t('car.not_found'));
-        navigation.goBack();
+      } catch (error: any) {
+        if (error.name !== 'AbortError' && error.name !== 'CanceledError') {
+          Alert.alert(t('common.error'), t('car.not_found'));
+          navigation.goBack();
+        }
       } finally {
         setLoading(false);
       }
     };
     fetchData();
+    
+    // Cleanup: abort any pending requests on unmount
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [carId, navigation, t]);
 
   React.useEffect(() => {
@@ -381,6 +399,7 @@ export default function BookingScreen({ route, navigation }: Props) {
                 title={t('booking.confirm')}
                 onPress={handleBooking}
                 loading={submitting}
+                disabled={submitting || !startDate || !endDate || hasPendingOverlap}
                 style={styles.confirmButton}
               />
             </ScrollView>

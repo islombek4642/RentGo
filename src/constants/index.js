@@ -19,6 +19,7 @@ export const BOOKING_STATUS = {
   CONFIRMED: 'confirmed',
   IN_PROGRESS: 'in_progress',
   CANCELLED: 'cancelled',
+  REJECTED: 'rejected',
   COMPLETED: 'completed',
 };
 

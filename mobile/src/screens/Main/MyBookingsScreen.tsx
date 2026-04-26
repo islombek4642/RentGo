@@ -25,18 +25,33 @@ export default function MyBookingsScreen({ navigation }: any) {
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
   const [hasError, setHasError] = React.useState(false);
+  // Double-action protection for cancel
+  const [cancellingId, setCancellingId] = React.useState<string | null>(null);
+  // AbortController ref
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   const fetchBookings = React.useCallback(async (isRefreshing = false) => {
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    
     try {
       if (isRefreshing) setRefreshing(true);
       else setLoading(true);
       
       setHasError(false);
-      const response = await api.get('/bookings/my');
+      const response = await api.get('/bookings/my', {
+        signal: abortControllerRef.current.signal
+      });
       setBookings(response.data.data.bookings);
-    } catch (error) {
-      console.error('Error fetching my bookings:', error);
-      setHasError(true);
+    } catch (error: any) {
+      // Don't log CanceledError/AbortError - these are intentional
+      if (error.name !== 'AbortError' && error.name !== 'CanceledError') {
+        console.error('Error fetching my bookings:', error);
+        setHasError(true);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -47,6 +62,13 @@ export default function MyBookingsScreen({ navigation }: any) {
   useNavigationFocusEffect(
     React.useCallback(() => {
       fetchBookings(true);
+      
+      // Cleanup: abort any pending requests on blur
+      return () => {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+      };
     }, [fetchBookings])
   );
 
@@ -60,6 +82,9 @@ export default function MyBookingsScreen({ navigation }: any) {
           text: t('booking.cancel'), 
           style: 'destructive',
           onPress: async () => {
+            // Double-action protection
+            if (cancellingId === bookingId) return;
+            setCancellingId(bookingId);
             try {
               const response = await api.patch(`/bookings/${bookingId}/status`, { status: 'cancelled' });
               if (response.data.status === 'success') {
@@ -154,7 +179,7 @@ export default function MyBookingsScreen({ navigation }: any) {
 
           <TouchableOpacity 
             style={styles.detailsButton}
-            onPress={() => navigation.navigate('CarDetail', { carId: item.car_id, isReadOnly: true })}
+            onPress={() => navigation.navigate('BookingDetail', { bookingId: item.id })}
           >
             <Text style={styles.detailsText}>{t('common.details')}</Text>
             <ChevronRight size={16} color={COLORS.primary} />

@@ -9,6 +9,7 @@ import TabNavigator from './TabNavigator';
 
 // Screens that are above tabs
 import CarDetailScreen from '../screens/Main/CarDetailScreen';
+import BookingDetailScreen from '../screens/Main/BookingDetailScreen';
 import BookingScreen from '../screens/Main/BookingScreen';
 import BookingSuccessScreen from '../screens/Main/BookingSuccessScreen';
 import OwnerDashboardScreen from '../screens/Owner/OwnerDashboardScreen';
@@ -34,6 +35,13 @@ export default function RootNavigator() {
           <Stack.Screen 
             name="CarDetail" 
             component={CarDetailScreen} 
+            options={{ 
+              headerShown: false,
+            }} 
+          />
+          <Stack.Screen 
+            name="BookingDetail" 
+            component={BookingDetailScreen} 
             options={{ 
               headerShown: false,
             }} 

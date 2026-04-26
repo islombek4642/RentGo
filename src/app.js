@@ -32,6 +32,11 @@ app.use(express.json({ limit: '10kb' }));
 // Language detection
 app.use(langMiddleware);
 
+// Request logging (production visibility)
+if (process.env.NODE_ENV === 'production') {
+  app.use(requestLogger);
+}
+
 // 2) ROUTES
 app.use('/api/v1', routes);
 
