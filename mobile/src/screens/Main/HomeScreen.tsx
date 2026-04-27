@@ -40,54 +40,59 @@ export default function HomeScreen({ navigation }: any) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [tempSearch, setTempSearch] = React.useState('');
 
+  const isMounted = React.useRef(true);
+
   const fetchCars = React.useCallback(async (isRefresh = false, silent = false) => {
     try {
       setHasError(false);
-      // Only show loading skeleton on initial load or refresh, not on filter changes
       if (!isRefresh && !silent) setLoading(true);
       
-      
-      let url = '/cars?available=true';
+      const params: any = { available: true };
       if (selectedRegionId !== 'All') {
-        url += `&region_id=${selectedRegionId}`;
+        params.region_id = selectedRegionId;
       }
       if (searchQuery.trim().length > 0) {
-        url += `&search=${encodeURIComponent(searchQuery.trim())}`;
+        params.search = searchQuery.trim();
       }
-      // NEW: Car type filter
       if (selectedCarType !== 'all') {
-        url += `&car_type=${selectedCarType}`;
+        params.car_type = selectedCarType;
       }
 
-      // Cancel previous request if exists
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
       abortControllerRef.current = new AbortController();
       
-      const response = await api.get(url, {
+      const response = await api.get('/cars', {
+        params,
         signal: abortControllerRef.current.signal
       });
-      setCars(response.data.data.cars);
+      
+      if (isMounted.current) {
+        setCars(response.data.data.cars);
+      }
     } catch (error: any) {
-      // Don't log CanceledError - these are intentional from AbortController
-      if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
+      if (isMounted.current && error.name !== 'CanceledError' && error.name !== 'AbortError') {
         console.error('Error fetching cars:', error);
         setHasError(true);
       }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (isMounted.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-  }, [selectedRegionId, searchQuery]);
+  }, [selectedRegionId, searchQuery, selectedCarType]);
 
   // Initial load only - filters are handled separately
   React.useEffect(() => {
+    isMounted.current = true;
     fetchRegions();
     fetchCars(false, true);
     
     // Cleanup: abort any pending requests on unmount
     return () => {
+      isMounted.current = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -97,9 +102,13 @@ export default function HomeScreen({ navigation }: any) {
   const fetchRegions = async () => {
     try {
       const response = await api.get('/locations/regions');
-      setRegions(response.data.data.regions);
+      if (isMounted.current) {
+        setRegions(response.data.data.regions);
+      }
     } catch (error) {
-      console.error('Failed to fetch regions:', error);
+      if (isMounted.current) {
+        console.error('Failed to fetch regions:', error);
+      }
     }
   };
 

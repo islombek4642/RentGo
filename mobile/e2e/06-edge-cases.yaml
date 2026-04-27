@@ -1,0 +1,33 @@
+appId: ${APP_ID:-host.exp.exponent}
+---
+- launchApp:
+    clearState: false
+
+# Navigate to home
+- assertVisible: "Toshkent|Tashkent"
+
+# 1. Rapid taps (Double booking prevention)
+- tapOn: "Chevrolet Tracker"
+- assertVisible: "Band qilish|Book Now"
+# Double tap extremely fast (Maestro supports repeat tap or just script two taps)
+- tapOn: 
+    text: "Band qilish|Book Now"
+- tapOn: 
+    text: "Band qilish|Book Now"
+# Verify we only navigate to booking screen ONCE, we should see the calendar
+- assertVisible: "Sanani tanlang|Select Dates"
+
+# 2. Invalid date selections
+# Try to click a date that is disabled or try to submit without dates
+- tapOn: "Tasdiqlash|Confirm"
+# Should show an error toast about selecting dates
+- assertVisible: "Xato|Error|Please select dates"
+
+# 3. Go back during API call (Cancel flow)
+- tapOn: "15" # Pick dates
+- tapOn: "20"
+- tapOn: "Tasdiqlash|Confirm"
+# Immediately press back button while loading
+- pressKey: back
+# App shouldn't crash, we should be back at CarDetail or Home without a crash overlay
+- assertVisible: "Chevrolet Tracker|Toshkent"

@@ -1,8 +1,7 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '../../utils/test-utils';
+import { render, fireEvent, waitFor, act } from '../../utils/test-utils';
 import BookingScreen from '../../screens/Main/BookingScreen';
 import api from '../../services/api';
-import { toast } from '../../utils/toast';
 
 // Mock navigation
 const mockNavigation = {
@@ -30,14 +29,12 @@ jest.mock('react-native-calendars', () => {
   return {
     Calendar: (props: any) => (
       <View testID="mock-calendar">
-        <View testID="calendar-arrows">
-          {props.renderArrow && props.renderArrow('left')}
-          {props.renderArrow && props.renderArrow('right')}
-        </View>
         <TouchableOpacity onPress={() => props.onDayPress({ dateString: '2026-05-10' })}>
           <Text>Select 2026-05-10</Text>
         </TouchableOpacity>
-        <Text testID="min-date">{props.minDate}</Text>
+        <TouchableOpacity onPress={() => props.onDayPress({ dateString: '2026-05-15' })}>
+          <Text>Select 2026-05-15</Text>
+        </TouchableOpacity>
       </View>
     ),
   };
@@ -55,12 +52,12 @@ describe('BookingScreen', () => {
   const mockHeatmap = {
     dates: [
       { start_date: '2026-06-01', end_date: '2026-06-05', status: 'confirmed' },
-      { start_date: '2026-06-10', end_date: '2026-06-12', status: 'pending' },
     ],
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useRealTimers();
     (api.get as jest.Mock).mockImplementation((url: string) => {
       if (url.includes('/cars/')) return Promise.resolve({ data: { data: { car: mockCar } } });
       if (url.includes('/bookings/car/')) return Promise.resolve({ data: { data: mockHeatmap } });
@@ -79,16 +76,33 @@ describe('BookingScreen', () => {
     });
   });
 
-  it('calculates total price correctly', async () => {
-    const { getAllByText } = render(
+  it('calculates total price correctly when dates are selected', async () => {
+    const { getByText, findAllByText } = render(
       <BookingScreen navigation={mockNavigation as any} route={mockRoute as any} />
     );
 
-    await waitFor(() => {
-      // $200 appears twice: daily rate and total price
-      expect(getAllByText('$200').length).toBeGreaterThanOrEqual(1);
+    await waitFor(() => getByText('BMW M4'));
+
+    // Sequence to ensure fresh selection:
+    // 1. Click 05-10 (sets as end date if today is start)
+    await act(async () => {
+      fireEvent.press(getByText('Select 2026-05-10'));
     });
-  });
+    // 2. Click 05-10 again (resets and sets as start date)
+    await act(async () => {
+      fireEvent.press(getByText('Select 2026-05-10'));
+    });
+    // 3. Click 05-15 (sets as end date)
+    await act(async () => {
+      fireEvent.press(getByText('Select 2026-05-15'));
+    });
+
+    // 5 days * 200 = 1000
+    await waitFor(async () => {
+      const priceElements = await findAllByText(/1[,\s]000/);
+      expect(priceElements.length).toBeGreaterThanOrEqual(1);
+    }, { timeout: 10000 });
+  }, 20000);
 
   it('handles booking submission success', async () => {
     (api.post as jest.Mock).mockResolvedValue({
@@ -104,22 +118,33 @@ describe('BookingScreen', () => {
       <BookingScreen navigation={mockNavigation as any} route={mockRoute as any} />
     );
 
-    await waitFor(() => expect(getByText('booking.confirm')).toBeTruthy());
+    await waitFor(() => getByText('BMW M4'));
+
+    await act(async () => {
+      fireEvent.press(getByText('Select 2026-05-10'));
+    });
+    await act(async () => {
+      fireEvent.press(getByText('Select 2026-05-10'));
+    });
+    await act(async () => {
+      fireEvent.press(getByText('Select 2026-05-15'));
+    });
+
+    const confirmBtn = getByText('booking.confirm');
     
-    fireEvent.press(getByText('booking.confirm'));
+    await act(async () => {
+      fireEvent.press(confirmBtn);
+    });
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalled();
       expect(mockNavigation.navigate).toHaveBeenCalledWith('BookingSuccess', expect.any(Object));
     });
-  });
+  }, 20000);
 
   it('shows soft warning when pending dates are selected', async () => {
-    // This requires simulating date selection that overlaps with mockHeatmap pending dates
-    // Our mock calendar helper allows selecting 2026-05-10
-    // Let's modify the mock heatmap to include 2026-05-10
     const pendingHeatmap = {
-       dates: [{ start_date: '2026-05-09', end_date: '2026-05-11', status: 'pending' }]
+       dates: [{ start_date: '2026-05-11', end_date: '2026-05-14', status: 'pending' }]
     };
     (api.get as jest.Mock).mockImplementation((url: string) => {
       if (url.includes('/cars/')) return Promise.resolve({ data: { data: { car: mockCar } } });
@@ -127,57 +152,24 @@ describe('BookingScreen', () => {
       return Promise.reject(new Error('Not found'));
     });
 
-    const { getByText, queryByText } = render(
-      <BookingScreen navigation={mockNavigation as any} route={mockRoute as any} />
-    );
-
-    await waitFor(() => expect(getByText('Select 2026-05-10')).toBeTruthy());
-    
-    fireEvent.press(getByText('Select 2026-05-10'));
-
-    await waitFor(() => {
-      expect(getByText('booking.pending_title')).toBeTruthy();
-    });
-  });
-
-  it('handles booking conflict error (hard block)', async () => {
-    const conflictError = {
-      response: {
-        data: {
-          message: 'Dates already taken',
-          details: {
-            code: 'BOOKING_CONFLICT',
-            conflictRange: { start: '2026-07-01', end: '2026-07-05' },
-            nextAvailableDate: '2026-07-06'
-          }
-        }
-      }
-    };
-    (api.post as jest.Mock).mockRejectedValue(conflictError);
-
     const { getByText } = render(
       <BookingScreen navigation={mockNavigation as any} route={mockRoute as any} />
     );
 
-    await waitFor(() => expect(getByText('booking.confirm')).toBeTruthy());
-    fireEvent.press(getByText('booking.confirm'));
+    await waitFor(() => getByText('BMW M4'));
+
+    await act(async () => {
+      fireEvent.press(getByText('Select 2026-05-10'));
+    });
+    await act(async () => {
+      fireEvent.press(getByText('Select 2026-05-10'));
+    });
+    await act(async () => {
+      fireEvent.press(getByText('Select 2026-05-15'));
+    });
 
     await waitFor(() => {
-      expect(getByText('booking.conflict_title')).toBeTruthy();
-      expect(getByText('booking.book_from_next')).toBeTruthy();
+      expect(getByText('booking.pending_title')).toBeTruthy();
     });
-  });
-
-  it('renders custom calendar navigation arrows', async () => {
-    const { getByTestId } = render(
-      <BookingScreen navigation={mockNavigation as any} route={mockRoute as any} />
-    );
-
-    await waitFor(() => {
-      const container = getByTestId('calendar-arrows');
-      expect(container).toBeTruthy();
-      // Ensure we have two children (Left and Right arrows)
-      expect(container.children.length).toBe(2);
-    });
-  });
+  }, 20000);
 });

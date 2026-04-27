@@ -23,7 +23,7 @@ const Loader: React.FC<LoaderProps> = ({ visible = true, overlay = false }) => {
   }
 
   return (
-    <View style={styles.center}>
+    <View style={styles.center} testID="loader">
       <ActivityIndicator size="large" color={COLORS.primary} />
     </View>
   );

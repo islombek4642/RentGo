@@ -1,0 +1,32 @@
+appId: ${APP_ID:-host.exp.exponent}
+---
+- launchApp:
+    clearState: false # Keep logged in state
+
+# 1. Open HomeScreen
+- assertVisible: "Toshkent" # Region or Greeting should be visible
+
+# 2. Switch region (Tashkent → Samarkand)
+- tapOn: "Samarqand" # or "Samarkand" depending on locale
+- extendedWaitUntil:
+    visible: ".*Samarqand.*"
+    timeout: 5000
+
+# 3. Verify list updates (Assume we have specific cars in Samarkand, or wait for loader to finish)
+# Maestro waits for elements to settle automatically.
+- swipe:
+    direction: UP
+    duration: 1000
+
+# 4. Use search
+- tapOn: ".*Qidirish.*" # Search placeholder
+- inputText: "Chevrolet Tracker"
+- pressKey: enter
+
+# 5. Verify results
+- assertVisible: "Chevrolet"
+- assertVisible: "Tracker"
+
+# Clear search
+- tapOn: ".*Qidirish.*"
+- eraseText: 20

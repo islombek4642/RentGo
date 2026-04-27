@@ -1,0 +1,36 @@
+appId: ${APP_ID:-host.exp.exponent}
+---
+- launchApp:
+    clearState: false
+
+# 1. Open car detail
+- assertVisible: "Chevrolet"
+- tapOn: "Chevrolet" # Tap on the first car card
+
+- assertVisible: "Chevrolet Tracker"
+- swipe:
+    direction: UP
+    duration: 1000
+
+# 2. Click "Book Now"
+- tapOn: ".*Band qilish.*" # Book Now button text
+
+# 3. Select valid date range
+- assertVisible: ".*kun.*" # some booking calendar text
+- tapOn:
+    id: "calendar-day-15" # We might need to tap explicit dates or coordinates, Maestro can tap by point or text
+- tapOn: "20" # Select a start date (e.g. 20th of month)
+- tapOn: "25" # Select an end date (e.g. 25th of month)
+
+# 4. Confirm booking
+- tapOn: ".*Tasdiqlash.*" # Confirm button
+
+# Wait for API delay
+- extendedWaitUntil:
+    visible: ".*Muvaffaqiyatli.*" # Success screen title
+    timeout: 10000
+
+# 5. Verify navigation to success screen
+- assertVisible: ".*Muvaffaqiyatli.*"
+- tapOn: ".*Asosiy.*" # Go to home button
+- assertVisible: ".*Qanday.*" # Home

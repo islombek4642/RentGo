@@ -17,7 +17,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.3.2",
+    "express-rate-limit": "^8.4.1",
     "helmet": "^8.1.0",
     "joi": "^18.1.2",
     "jsonwebtoken": "^9.0.3",
@@ -27,8 +27,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^14.0.0",
-    "winston": "^3.19.0",
-    "z-schema": "^5.0.5"
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "@jest/globals": "^30.3.0",

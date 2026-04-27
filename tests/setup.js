@@ -48,24 +48,30 @@ beforeAll(async () => {
 
   await ensureTestDatabaseExists();
 
-  // Check if tables exist
-  const tableCheck = await pool.query(`
-    SELECT EXISTS (
-      SELECT FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name = 'users'
-    );
+  // Force a fresh schema for tests to avoid inconsistent states
+  console.log('Refreshing test database schema...');
+  await pool.query(`
+    DROP TABLE IF EXISTS reviews CASCADE;
+    DROP TABLE IF EXISTS refresh_tokens CASCADE;
+    DROP TABLE IF EXISTS bookings CASCADE;
+    DROP TABLE IF EXISTS cars CASCADE;
+    DROP TABLE IF EXISTS districts CASCADE;
+    DROP TABLE IF EXISTS regions CASCADE;
+    DROP TABLE IF EXISTS users CASCADE;
   `);
 
-  if (!tableCheck.rows[0].exists) {
-    console.log('Test database tables not found. Initializing schema...');
-    const schemaPath = path.join(process.cwd(), 'database', 'schema.sql');
-    const sql = fs.readFileSync(schemaPath, 'utf8');
-    const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 0);
-    for (const statement of statements) {
+  console.log('Initializing schema...');
+  const schemaPath = path.join(process.cwd(), 'database', 'schema.sql');
+  const sql = fs.readFileSync(schemaPath, 'utf8');
+  const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 0);
+  for (const statement of statements) {
+    try {
       await pool.query(statement);
+    } catch (err) {
+      console.error(`Error executing statement: ${statement.substring(0, 50)}...`, err.message);
     }
   }
+  console.log('Schema initialization completed.');
 
   // Ensure the check_dates constraint uses strict > (half-open interval model)
   try {

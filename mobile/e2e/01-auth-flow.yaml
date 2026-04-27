@@ -1,0 +1,36 @@
+appId: ${APP_ID:-host.exp.exponent}
+---
+- launchApp:
+    clearState: true
+
+# If using Expo Go, may need to skip the onboarding/home screen of Expo
+# Assuming the app is loaded and we are at the Login/Onboarding screen
+- assertVisible: "Tizimga kirish" # the auth.welcome or similar title
+
+# 1. Invalid credentials
+- tapOn:
+    id: "phone-input" # Or tap on the text "Phone"
+- tapOn: "Telefon raqam" # Tap on placeholder or label
+- inputText: "+998900000000"
+
+- tapOn: "Parol" # password label
+- inputText: "wrongpassword"
+
+- tapOn: "Kirish" # Login button
+
+# Expect error toast
+- assertVisible: "Xato" # Part of the error title or message
+
+# 2. Valid credentials
+- tapOn: "+998900000000"
+- eraseText: 20
+- inputText: "+998901234567"
+
+- tapOn: "wrongpassword"
+- eraseText: 20
+- inputText: "password123"
+
+- tapOn: "Kirish"
+
+# Navigate to home
+- assertVisible: ".*Qanday.*" # Wait for Home screen

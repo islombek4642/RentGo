@@ -1,0 +1,28 @@
+appId: ${APP_ID:-host.exp.exponent}
+---
+- launchApp:
+    clearState: false
+
+# Navigate to Profile then Owner Dashboard
+# Bottom tab index or text
+- tapOn: "Profil"
+- assertVisible: "Mening avtomobillarim" # Owner specific button or Dashboard
+- tapOn: ".*Boshqaruv paneli.*|.*Dashboard.*"
+
+# 1. Open OwnerDashboard
+- assertVisible: ".*Boshqaruv.*" # Dashboard title
+- assertVisible: "Tasdiqlash" # Pending request accept button (Accept / Qabul qilish)
+
+# 2. Accept booking request
+- tapOn: "Tasdiqlash|Qabul qilish|Accept"
+
+# 3. Verify status changes
+- assertVisible: "Qabul qilindi|Tasdiqlandi|Confirmed"
+
+# 4. Start trip
+- tapOn: "Safarni boshlash|Start Trip"
+- assertVisible: "Jarayonda|In Progress"
+
+# 5. Complete trip
+- tapOn: "Safarni yakunlash|Complete Trip"
+- assertVisible: "Yakunlandi|Completed"

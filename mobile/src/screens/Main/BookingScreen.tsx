@@ -69,10 +69,11 @@ export default function BookingScreen({ route, navigation }: Props) {
     setHasPendingOverlap(pendingMatch);
   }, [startDate, endDate, carBookedDates]);
 
-  // AbortController ref for cancelling requests on unmount
+  const isMounted = React.useRef(true);
   const abortControllerRef = React.useRef<AbortController | null>(null);
 
   React.useEffect(() => {
+    isMounted.current = true;
     if (!carId) {
       toast.error(t('common.error'), t('car.not_found'));
       navigation.goBack();
@@ -80,7 +81,6 @@ export default function BookingScreen({ route, navigation }: Props) {
     }
 
     const fetchData = async () => {
-      // Cancel previous request if exists
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -91,21 +91,25 @@ export default function BookingScreen({ route, navigation }: Props) {
           api.get(`/cars/${carId}`, { signal: abortControllerRef.current.signal }),
           api.get(`/bookings/car/${carId}`, { signal: abortControllerRef.current.signal })
         ]);
-        setCar(carRes.data.data.car);
-        setCarBookedDates(heatmapRes.data.data.dates);
+        if (isMounted.current) {
+          setCar(carRes.data.data.car);
+          setCarBookedDates(heatmapRes.data.data.dates);
+        }
       } catch (error: any) {
-        if (error.name !== 'AbortError' && error.name !== 'CanceledError') {
+        if (isMounted.current && error.name !== 'AbortError' && error.name !== 'CanceledError') {
           Alert.alert(t('common.error'), t('car.not_found'));
           navigation.goBack();
         }
       } finally {
-        setLoading(false);
+        if (isMounted.current) {
+          setLoading(false);
+        }
       }
     };
     fetchData();
     
-    // Cleanup: abort any pending requests on unmount
     return () => {
+      isMounted.current = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -172,7 +176,9 @@ export default function BookingScreen({ route, navigation }: Props) {
         toast.error(t('common.error'), message);
       }
     } finally {
-      setSubmitting(false);
+      if (isMounted.current) {
+        setSubmitting(false);
+      }
     }
   };
 

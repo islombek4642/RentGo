@@ -1,0 +1,32 @@
+appId: ${APP_ID:-host.exp.exponent}
+---
+- launchApp:
+    clearState: false
+
+# 1. Navigate to MyBookings
+- tapOn: "Bandliklar|Bookings" # Bottom tab
+
+# 2. Select completed booking and click Review
+- assertVisible: "Yakunlandi|Completed" # Ensure we see a completed booking
+- swipe:
+    direction: UP
+    duration: 1000
+
+- tapOn: "Fikr qoldirish|Submit Review"
+
+# 3. Submit review
+- assertVisible: "Fikr qoldirish|Review" # Header
+- tapOn:
+    id: "star-rating-5" # or tap on coordinates if stars are a custom component
+- tapOn: "Sharh yozish|Write a review..." # input placeholder
+- inputText: "Ajoyib avtomobil, rahmat!"
+- tapOn: "Yuborish|Submit"
+
+# Wait for API delay
+- extendedWaitUntil:
+    visible: "Muvaffaqiyatli|Success"
+    timeout: 5000
+
+# 4. Verify UI updates
+- assertVisible: "Yakunlandi|Completed"
+- assertVisible: "Fikr qoldirildi|Review Submitted" # Reviewed badge text

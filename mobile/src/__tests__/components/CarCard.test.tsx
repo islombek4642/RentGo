@@ -18,7 +18,7 @@ describe('CarCard Component', () => {
     expect(getByText('Tesla Model 3')).toBeTruthy();
     expect(getByText('2023')).toBeTruthy();
     expect(getByText('Tashkent')).toBeTruthy();
-    expect(getByText('$150')).toBeTruthy();
+    expect(getByText('150 $')).toBeTruthy();
     expect(getByText('car.per_day')).toBeTruthy(); // Using mocked translation key
   });
 

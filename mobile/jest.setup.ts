@@ -6,7 +6,24 @@ if (typeof global.structuredClone !== 'function') {
   global.structuredClone = (obj: any) => JSON.parse(JSON.stringify(obj));
 }
 
-import '@testing-library/jest-native/extend-expect';
+// Mock AbortController
+if (typeof global.AbortController === 'undefined') {
+  // @ts-ignore
+  global.AbortController = class {
+    signal = { aborted: false, addEventListener: jest.fn(), removeEventListener: jest.fn() };
+    abort() { this.signal.aborted = true; }
+  };
+}
+
+// Matchers are now built into @testing-library/react-native since v12.4+
+// No explicit import needed for matchers like .toBeOnTheScreen(), .toBeVisible(), etc.
+
+// Console masking REMOVED — errors must be fixed at root cause, not suppressed
+
+afterEach(() => {
+  jest.clearAllMocks();
+  jest.useRealTimers();
+});
 
 // Mock react-native-safe-area-context
 jest.mock('react-native-safe-area-context', () => ({
@@ -26,6 +43,13 @@ jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({
     params: {},
   }),
+  useFocusEffect: (cb: () => any) => {
+    const React = require('react');
+    React.useEffect(() => {
+      const cleanup = cb();
+      return typeof cleanup === 'function' ? cleanup : undefined;
+    }, []);
+  },
 }));
 
 jest.mock('lucide-react-native', () => {
@@ -52,22 +76,60 @@ jest.mock('lucide-react-native', () => {
     Users: mockIcon('Users'),
     Settings: mockIcon('Settings'),
     CheckCircle2: mockIcon('CheckCircle2'),
+    CheckCircle: mockIcon('CheckCircle'),
+    XCircle: mockIcon('XCircle'),
     Home: mockIcon('Home'),
     Phone: mockIcon('Phone'),
     User: mockIcon('User'),
     Eye: mockIcon('Eye'),
     EyeOff: mockIcon('EyeOff'),
     Globe: mockIcon('Globe'),
+    LayoutDashboard: mockIcon('LayoutDashboard'),
+    PlusCircle: mockIcon('PlusCircle'),
+    Camera: mockIcon('Camera'),
+    Star: mockIcon('Star'),
+    Fuel: mockIcon('Fuel'),
+    Trash2: mockIcon('Trash2'),
+    Timer: mockIcon('Timer'),
+    DollarSign: mockIcon('DollarSign'),
   };
 });
+
+// Mock LayoutAnimation
+const { UIManager } = require('react-native');
+if (UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+jest.mock('react-native/Libraries/LayoutAnimation/LayoutAnimation', () => ({
+  ...jest.requireActual('react-native/Libraries/LayoutAnimation/LayoutAnimation'),
+  configureNext: jest.fn(),
+  Presets: {
+    easeInEaseOut: 'easeInEaseOut',
+    linear: 'linear',
+    spring: 'spring',
+  },
+}));
 
 // Mock react-i18next
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: (key: string, options?: any) => {
+      if (key === 'booking.conflict_msg' && options) {
+        return `booking.conflict_msg ${options.start} ${options.end}`;
+      }
+      if (key === 'booking.book_from_next' && options) {
+        return `booking.book_from_next ${options.date}`;
+      }
+      const translations: Record<string, string> = {
+        'common.currency': '$',
+        'auth.phone_placeholder': '+998 90 123 45 67',
+        'auth.password_placeholder': '••••••••',
+      };
+      return translations[key] || key;
+    },
     i18n: {
       changeLanguage: jest.fn(),
-      language: 'en',
+      language: 'uz',
     },
   }),
   initReactI18next: {
