@@ -33,9 +33,14 @@ class BookingRepository {
   async findByIdWithDetails(id) {
     const result = await pool.query(
       `SELECT b.*, c.brand, c.model, c.image_url as car_image, c.price_per_day, c.owner_id,
+              c.location as car_location,
+              r.name_uz as region_name_uz, r.name_ru as region_name_ru, r.name_oz as region_name_oz,
+              d.name_uz as district_name_uz, d.name_ru as district_name_ru, d.name_oz as district_name_oz,
               u.name as renter_name, u.phone as renter_phone, u.is_verified as renter_verified
        FROM bookings b
        JOIN cars c ON b.car_id = c.id
+       LEFT JOIN regions r ON c.region_id = r.id
+       LEFT JOIN districts d ON c.district_id = d.id
        JOIN users u ON b.user_id = u.id
        WHERE b.id = $1`,
       [id]

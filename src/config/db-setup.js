@@ -108,12 +108,13 @@ export const setupDatabase = async () => {
     // 1.5) Check and add missing columns to existing tables
     // Check if cars table has region_id column
     const columnCheck = await pool.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.columns 
-        WHERE table_name = 'cars' AND column_name = 'region_id'
-      ) as has_region_id;
+      SELECT 
+        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'region_id') as has_region_id,
+        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'car_type') as has_car_type
     `);
+    
     const hasRegionIdColumn = columnCheck.rows[0].has_region_id === true || columnCheck.rows[0].has_region_id === 't';
+    const hasCarTypeColumn = columnCheck.rows[0].has_car_type === true || columnCheck.rows[0].has_car_type === 't';
     
     if (!hasRegionIdColumn) {
       logger.info('Adding missing location columns to cars table...');
@@ -123,6 +124,20 @@ export const setupDatabase = async () => {
         ADD COLUMN IF NOT EXISTS district_id INTEGER REFERENCES districts(id) ON DELETE SET NULL;
       `);
       logger.info('Location columns added to cars table! ✅');
+    }
+
+    if (!hasCarTypeColumn) {
+      logger.info('Adding missing enhanced columns to cars table...');
+      await pool.query(`
+        ALTER TABLE cars 
+        ADD COLUMN IF NOT EXISTS description TEXT,
+        ADD COLUMN IF NOT EXISTS features JSONB DEFAULT '[]',
+        ADD COLUMN IF NOT EXISTS car_type VARCHAR(50) DEFAULT 'economy' CHECK (car_type IN ('economy', 'standard', 'luxury', 'suv', 'minivan')),
+        ADD COLUMN IF NOT EXISTS fuel_type VARCHAR(50) DEFAULT 'petrol' CHECK (fuel_type IN ('petrol', 'diesel', 'electric', 'hybrid')),
+        ADD COLUMN IF NOT EXISTS transmission VARCHAR(50) DEFAULT 'automatic' CHECK (transmission IN ('automatic', 'manual')),
+        ADD COLUMN IF NOT EXISTS seats INTEGER DEFAULT 5;
+      `);
+      logger.info('Enhanced car columns added to cars table! ✅');
     }
     
     // Check and create reviews table if missing

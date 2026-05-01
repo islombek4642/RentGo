@@ -135,6 +135,9 @@ class BookingService {
     booking.owner_rating = car.owner_rating;
     booking.owner_review_count = car.owner_review_count;
 
+    // Use the formatted location from car service
+    booking.location = car.display_location;
+
     return booking;
   }
 
