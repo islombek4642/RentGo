@@ -134,7 +134,7 @@ echo -e "${GREEN}============================================${NC}"
 
 # Avtomatik linklarni aniqlash va chiqarish
 if [ -z "$DOMAIN" ] || [ "$DOMAIN" == "localhost" ]; then
-    PUBLIC_IP=$(curl -s ifconfig.me || echo "SIZNING_IP_MANZILINGIZ")
+    PUBLIC_IP=$(curl -s -4 ifconfig.me || echo "SIZNING_IP_MANZILINGIZ")
     BASE_URL="http://${PUBLIC_IP}:8080"
 else
     if [ "$SSL_ENABLED" -eq 1 ]; then
