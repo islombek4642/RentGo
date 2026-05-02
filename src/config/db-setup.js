@@ -112,7 +112,8 @@ export const setupDatabase = async () => {
         EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'car_type') as has_car_type,
         EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'status') as has_status,
         EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'deleted_at') as has_deleted_at,
-        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'is_active') as has_is_active
+        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'is_active') as has_is_active,
+        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'token_version') as has_token_version
     `);
     
     const hasRegionIdColumn = columnCheck.rows[0].has_region_id === true || columnCheck.rows[0].has_region_id === 't';
@@ -120,6 +121,7 @@ export const setupDatabase = async () => {
     const hasStatusColumn = columnCheck.rows[0].has_status === true || columnCheck.rows[0].has_status === 't';
     const hasDeletedAt = columnCheck.rows[0].has_deleted_at === true || columnCheck.rows[0].has_deleted_at === 't';
     const hasIsActive = columnCheck.rows[0].has_is_active === true || columnCheck.rows[0].has_is_active === 't';
+    const hasTokenVersion = columnCheck.rows[0].has_token_version === true || columnCheck.rows[0].has_token_version === 't';
     
     if (!hasDeletedAt) {
       logger.info('Adding missing deleted_at columns for soft deletes...');
@@ -136,6 +138,12 @@ export const setupDatabase = async () => {
       logger.info('Adding missing is_active column to users table...');
       await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE');
       logger.info('is_active column added! ✅');
+    }
+
+    if (!hasTokenVersion) {
+      logger.info('Adding missing token_version column to users table...');
+      await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER DEFAULT 1');
+      logger.info('token_version column added! ✅');
     }
     
     if (!hasRegionIdColumn) {
