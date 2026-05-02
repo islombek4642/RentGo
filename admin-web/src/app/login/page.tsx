@@ -17,21 +17,24 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // In a real app, we'd call the API here
-      // For now, let's simulate a successful login as SUPER_ADMIN
-      console.log('Logging in with:', { phone, password });
-      
-      const mockUser = {
-        id: '1',
-        name: 'Super Admin',
-        role: ROLES.SUPER_ADMIN,
-      };
-      const mockToken = 'mock-jwt-token';
+      const response = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone, password }),
+      });
 
-      setAuth(mockUser as any, mockToken);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login muvaffaqiyatsiz');
+      }
+
+      setAuth(data.data.user, data.data.tokens.accessToken);
       router.push('/dashboard');
-    } catch (error) {
-      alert('Login muvaffaqiyatsiz tugadi');
+    } catch (error: any) {
+      alert(error.message || 'Tarmoq xatosi yuz berdi');
     } finally {
       setIsLoading(false);
     }
