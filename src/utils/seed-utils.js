@@ -12,23 +12,24 @@ export const runSeedData = async (pool) => {
 
   try {
     // 1) Ensure Admin exists
-    const adminPassword = await bcrypt.hash(config.seeding.adminPassword, SYSTEM_CONFIG.BCRYPT_SALT_ROUNDS);
-    await pool.query(
-      `INSERT INTO users (name, phone, password, role) 
-       VALUES ($1, $2, $3, $4) 
-       ON CONFLICT (phone) DO NOTHING`,
-      ['System Admin', '+998901234567', adminPassword, ROLES.ADMIN]
-    );
+    const adminExists = await pool.query('SELECT id FROM users WHERE phone = $1 AND deleted_at IS NULL', ['+998901234567']);
+    if (adminExists.rows.length === 0) {
+      const adminPassword = await bcrypt.hash(config.seeding.adminPassword, SYSTEM_CONFIG.BCRYPT_SALT_ROUNDS);
+      await pool.query(
+        `INSERT INTO users (name, phone, password, role) VALUES ($1, $2, $3, $4)`,
+        ['System Admin', '+998901234567', adminPassword, ROLES.ADMIN]
+      );
+    }
 
     // 2) Ensure Regular User exists
-    const userPassword = await bcrypt.hash(config.seeding.userPassword, SYSTEM_CONFIG.BCRYPT_SALT_ROUNDS);
-    const userResult = await pool.query(
-      `INSERT INTO users (name, phone, password, role) 
-       VALUES ($1, $2, $3, $4) 
-       ON CONFLICT (phone) DO NOTHING 
-       RETURNING id`,
-      ['John Doe', '+998909876543', userPassword, ROLES.USER]
-    );
+    const userExists = await pool.query('SELECT id FROM users WHERE phone = $1 AND deleted_at IS NULL', ['+998909876543']);
+    if (userExists.rows.length === 0) {
+      const userPassword = await bcrypt.hash(config.seeding.userPassword, SYSTEM_CONFIG.BCRYPT_SALT_ROUNDS);
+      await pool.query(
+        `INSERT INTO users (name, phone, password, role) VALUES ($1, $2, $3, $4)`,
+        ['John Doe', '+998909876543', userPassword, ROLES.USER]
+      );
+    }
 
     // Get an admin ID for car ownership (fallback if creation skipped)
     const adminCheck = await pool.query('SELECT id FROM users WHERE role = $1 LIMIT 1', [ROLES.ADMIN]);

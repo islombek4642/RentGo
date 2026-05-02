@@ -3,6 +3,7 @@ import bookingController from './bookings.controller.js';
 import { protect } from '../../middleware/auth.middleware.js';
 import validate from '../../middleware/validate.middleware.js';
 import { createBookingSchema, updateBookingStatusSchema } from './bookings.validation.js';
+import { idempotency } from '../../middleware/idempotency.middleware.js';
 
 const router = express.Router();
 
@@ -17,9 +18,16 @@ router.use(protect); // All booking routes are protected
  *       Books a car for a given date range. The total price is calculated automatically
  *       based on the car's `price_per_day` and the number of days.
  *       Will fail if the car is unavailable or dates overlap with an existing booking.
+ *       Supports X-Idempotency-Key header to prevent duplicate bookings.
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: X-Idempotency-Key
+ *         schema:
+ *           type: string
+ *         description: Unique key to prevent duplicate booking requests
  *     requestBody:
  *       required: true
  *       content:
@@ -84,7 +92,7 @@ router.use(protect); // All booking routes are protected
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/', validate(createBookingSchema), bookingController.createBooking);
+router.post('/', idempotency, validate(createBookingSchema), bookingController.createBooking);
 
 /**
  * @swagger

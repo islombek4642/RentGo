@@ -1,4 +1,5 @@
 import axios from 'axios';
+import axiosRetry from 'axios-retry';
 import CONFIG from '../constants/config';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -8,6 +9,15 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Configure Axios Retry: retry up to 3 times on network errors or 5xx
+axiosRetry(api, { 
+  retries: 3, 
+  retryDelay: axiosRetry.exponentialDelay,
+  retryCondition: (error) => {
+    return axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 503;
+  }
 });
 
 // Request Interceptor: Attach Token

@@ -1,6 +1,6 @@
 import express from 'express';
 import carController from './cars.controller.js';
-import { protect } from '../../middleware/auth.middleware.js';
+import { protect, optionalProtect } from '../../middleware/auth.middleware.js';
 import validate from '../../middleware/validate.middleware.js';
 import { upload } from '../../middleware/upload.middleware.js';
 import { carSchema, carUpdateSchema } from './cars.validation.js';
@@ -133,7 +133,7 @@ router.get('/my', carController.getMyCars);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/:id', carController.getCar);
+router.get('/:id', optionalProtect, carController.getCar);
 
 /**
  * @swagger

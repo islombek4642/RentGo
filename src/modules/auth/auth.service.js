@@ -85,11 +85,15 @@ class AuthService {
   }
 
   async generateTokens(id) {
-    const accessToken = jwt.sign({ id }, config.jwt.secret, {
+    // Fetch current token_version for JWT payload
+    const userResult = await authRepository.findById(id);
+    const tokenVersion = userResult?.token_version || 1;
+
+    const accessToken = jwt.sign({ id, token_version: tokenVersion }, config.jwt.secret, {
       expiresIn: config.jwt.expiresIn,
     });
 
-    const refreshToken = jwt.sign({ id }, config.jwt.refreshSecret, {
+    const refreshToken = jwt.sign({ id, token_version: tokenVersion }, config.jwt.refreshSecret, {
       expiresIn: config.jwt.refreshExpiresIn,
     });
 

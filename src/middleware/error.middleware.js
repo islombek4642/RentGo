@@ -1,111 +1,75 @@
-import { logger } from '../config/logger.js';
-import { config } from '../config/env.js';
-import { t } from '../utils/i18n.js';
+import winston from 'winston';
+import * as Sentry from '@sentry/node';
+import { HTTP_STATUS } from '../constants/index.js';
+
+// Winston Logger Setup
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' }),
+  ],
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.simple()
+    ),
+  }));
+}
 
 /**
- * Categorize error type for logging
+ * Global Error Handling Middleware
  */
-const getErrorCategory = (statusCode) => {
-  if (statusCode >= 500) return 'SYSTEM_ERROR';
-  if (statusCode === 401 || statusCode === 403) return 'AUTH_ERROR';
-  if (statusCode === 400 || statusCode === 422) return 'VALIDATION_ERROR';
-  if (statusCode === 404) return 'NOT_FOUND';
-  return 'UNKNOWN_ERROR';
-};
+const globalErrorHandler = (err, req, res, next) => {
+  err.statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  err.status = err.status || 'error';
 
-/**
- * Log error with structured data
- */
-const logError = (err, req, category) => {
-  const errorLog = {
-    category,
-    endpoint: `${req.method} ${req.originalUrl}`,
-    userId: req.user?.id || 'anonymous',
-    statusCode: err.statusCode,
-    message: err.message,
-    stack: config.env === 'development' ? err.stack : undefined,
-    // Safe payload logging (exclude passwords, tokens)
-    payload: req.body ? sanitizePayload(req.body) : undefined,
-    timestamp: new Date().toISOString(),
-  };
+  // Log error
+  logger.error(`${err.statusCode} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
 
-  if (category === 'SYSTEM_ERROR') {
-    logger.error(`[ERROR] ${category}: ${errorLog.endpoint} | user:${errorLog.userId} | ${err.message}`, errorLog);
-  } else if (category === 'AUTH_ERROR') {
-    logger.warn(`[ERROR] ${category}: ${errorLog.endpoint} | user:${errorLog.userId} | ${err.message}`, errorLog);
-  } else {
-    logger.info(`[ERROR] ${category}: ${errorLog.endpoint} | user:${errorLog.userId} | ${err.message}`, errorLog);
+  // Sentry logging in production
+  if (process.env.NODE_ENV === 'production') {
+    Sentry.captureException(err);
   }
-};
 
-/**
- * Sanitize payload to remove sensitive data
- */
-const sanitizePayload = (payload) => {
-  const sensitiveFields = ['password', 'token', 'refreshToken', 'accessToken', 'secret'];
-  const sanitized = { ...payload };
-  
-  sensitiveFields.forEach(field => {
-    if (sanitized[field]) sanitized[field] = '[REDACTED]';
-  });
-  
-  return sanitized;
-};
+  // Production Error Response (Clean, no stack trace)
+  if (process.env.NODE_ENV === 'production') {
+    // Operational, trusted error: send message to client
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        success: false,
+        status: err.status,
+        message: err.message,
+        code: err.code || 'INTERNAL_ERROR'
+      });
+    }
+    
+    // Programming or other unknown error: don't leak error details
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: 'error',
+      message: 'Nimadir xato ketdi! Iltimos, keyinroq urinib ko\'ring.',
+      code: 'INTERNAL_ERROR'
+    });
+  }
 
-const sendErrorDev = (err, res) => {
+  // Development Error Response (Detailed with stack)
   res.status(err.statusCode).json({
     success: false,
     status: err.status,
-    error: err,
     message: err.message,
+    code: err.code || 'INTERNAL_ERROR',
     stack: err.stack,
-    code: err.code || 'ERROR',
-    ...(err.details && { details: err.details })
+    error: err
   });
 };
 
-const sendErrorProd = (err, res, req) => {
-  // Operational, trusted error: send message to client
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      success: false,
-      status: err.status,
-      message: err.message,
-      code: err.code || 'OPERATIONAL_ERROR',
-      ...(err.details && { details: err.details })
-    });
-  } else {
-    // Programming or other unknown error: don't leak error details
-    res.status(500).json({
-      success: false,
-      status: 'error',
-      message: 'Something went very wrong!',
-      code: 'INTERNAL_ERROR',
-    });
-  }
-};
-
-const globalErrorHandler = (err, req, res, next) => {
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
-
-  // Handle Multer errors
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    err.statusCode = 400;
-    err.status = 'fail';
-    err.isOperational = true;
-    err.message = t(req.lang, 'profile.upload_too_large') || 'File size too large (max 5MB)';
-  }
-
-  // Categorize and log error
-  const category = getErrorCategory(err.statusCode);
-  logError(err, req, category);
-
-  if (config.env === 'development') {
-    sendErrorDev(err, res);
-  } else {
-    sendErrorProd(err, res, req);
-  }
-};
-
 export default globalErrorHandler;
+export { logger };

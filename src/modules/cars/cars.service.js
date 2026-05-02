@@ -16,9 +16,20 @@ class CarService {
     return cars.map(car => this._formatCarLocation(car, 'uz')); // Default to uz for owner list
   }
 
-  async getCar(id, lang) {
+  async getCar(id, lang, user = null) {
     const car = await carRepository.findById(id);
     if (!car) throw new AppError(t(lang, 'car.not_found'), HTTP_STATUS.NOT_FOUND);
+
+    // Access Control: Guest users can only see approved cars
+    // Owner and Admin can see their own / any car
+    const isApproved = car.status === 'approved';
+    const isOwner = user && car.owner_id === user.id;
+    const isAdmin = user && user.role === ROLES.ADMIN;
+
+    if (!isApproved && !isOwner && !isAdmin) {
+      throw new AppError(t(lang, 'car.not_found'), HTTP_STATUS.NOT_FOUND); // Hide existence for security
+    }
+
     return this._formatCarLocation(car, lang);
   }
 
@@ -27,11 +38,11 @@ class CarService {
     return await carRepository.create({ ...carData, owner_id: userId });
   }
 
-  async updateCar(carId, userId, carData, lang) {
-    const car = await this.getCar(carId, lang);
+  async updateCar(carId, user, carData, lang) {
+    const car = await this.getCar(carId, lang, user);
 
     // Only owner can update
-    if (car.owner_id !== userId) {
+    if (car.owner_id !== user.id) {
       throw new AppError(t(lang, 'car.not_owner'), HTTP_STATUS.FORBIDDEN);
     }
 
@@ -43,7 +54,7 @@ class CarService {
   }
 
   async deleteCar(carId, user, lang) {
-    const car = await this.getCar(carId, lang);
+    const car = await this.getCar(carId, lang, user);
 
     // Only owner or admin can delete
     if (car.owner_id !== user.id && user.role !== ROLES.ADMIN) {

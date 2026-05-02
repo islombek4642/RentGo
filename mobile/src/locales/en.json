@@ -85,6 +85,10 @@
     "fuel": "Fuel",
     "year": "Year",
     "per_day": "day",
+    "units": {
+      "items": "items",
+      "year": "yr"
+    },
     "insurance": "Full Insurance",
     "instant": "Instant Confirmation",
     "not_available": "Car not available",
@@ -95,7 +99,10 @@
     "placeholder_model": "e.g. Malibu",
     "placeholder_year": "2024",
     "placeholder_price": "500000",
-    "placeholder_location": "e.g. Tashkent"
+    "placeholder_location": "e.g. Tashkent",
+    "transmission": "Transmission",
+    "transmission_manual": "Manual",
+    "transmission_automatic": "Automatic"
   },
   "booking": {
     "title": "Booking Details",
@@ -174,6 +181,21 @@
     "dashboard_intro_title": "Start earning from rentals",
     "dashboard_intro_desc": "Want to start renting out your car? List it now and start receiving requests.",
     "start_listing": "Add a Car"
+  },
+  "regions": {
+    "tashkent": "Tashkent",
+    "samarkand": "Samarkand",
+    "bukhara": "Bukhara",
+    "andijan": "Andijan",
+    "namangan": "Namangan",
+    "fergana": "Fergana",
+    "navoi": "Navoi",
+    "jizzakh": "Jizzakh",
+    "kashkadarya": "Kashkadarya",
+    "surkhandarya": "Surkhandarya",
+    "syrdarya": "Syrdarya",
+    "khorezm": "Khorezm",
+    "karakalpakstan": "Karakalpakstan"
   },
   "review": {
     "title": "Leave a Review",

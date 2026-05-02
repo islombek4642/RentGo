@@ -37,7 +37,17 @@ if (process.env.NODE_ENV === 'production') {
   app.use(requestLogger);
 }
 
+import pool from './config/db.js';
+
 // 2) ROUTES
+app.get('/api/v1/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.status(200).json({ status: 'ok', message: 'API is running and DB is connected' });
+  } catch (error) {
+    res.status(503).json({ status: 'error', message: 'Database connection failed' });
+  }
+});
 app.use('/api/v1', routes);
 
 // 3) UNHANDLED ROUTES

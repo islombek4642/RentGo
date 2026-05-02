@@ -12,6 +12,7 @@ import {
   Platform,
   Modal
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -206,20 +207,21 @@ export default function AddEditCarScreen({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <ChevronLeft size={24} color={COLORS.text.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {isEdit ? t('owner.edit_car_title') : t('owner.add_car_title')}
-          </Text>
-        </View>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <ChevronLeft size={24} color={COLORS.text.primary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>
+          {isEdit ? t('owner.edit_car_title') : t('owner.add_car_title')}
+        </Text>
+      </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView 
+          contentContainerStyle={styles.scrollContent} 
+          showsVerticalScrollIndicator={false}
+          enableOnAndroid={true}
+          extraScrollHeight={100}
+        >
           <TouchableOpacity style={styles.imagePlaceholder} onPress={pickImage}>
             {localImageUri || formData.image_url ? (
               <Image 
@@ -448,8 +450,7 @@ export default function AddEditCarScreen({ route, navigation }: any) {
               style={styles.submitButton}
             />
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

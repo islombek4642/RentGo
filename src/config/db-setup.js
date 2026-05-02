@@ -110,11 +110,13 @@ export const setupDatabase = async () => {
     const columnCheck = await pool.query(`
       SELECT 
         EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'region_id') as has_region_id,
-        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'car_type') as has_car_type
+        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'car_type') as has_car_type,
+        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'status') as has_status
     `);
     
     const hasRegionIdColumn = columnCheck.rows[0].has_region_id === true || columnCheck.rows[0].has_region_id === 't';
     const hasCarTypeColumn = columnCheck.rows[0].has_car_type === true || columnCheck.rows[0].has_car_type === 't';
+    const hasStatusColumn = columnCheck.rows[0].has_status === true || columnCheck.rows[0].has_status === 't';
     
     if (!hasRegionIdColumn) {
       logger.info('Adding missing location columns to cars table...');
@@ -138,6 +140,18 @@ export const setupDatabase = async () => {
         ADD COLUMN IF NOT EXISTS seats INTEGER DEFAULT 5;
       `);
       logger.info('Enhanced car columns added to cars table! ✅');
+    }
+
+    if (!hasStatusColumn) {
+      logger.info('Adding missing status column to cars table...');
+      await pool.query(`
+        ALTER TABLE cars 
+        ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected'));
+        
+        -- Mark existing cars as approved to avoid breaking current listings
+        UPDATE cars SET status = 'approved' WHERE status IS NULL OR status = 'pending';
+      `);
+      logger.info('Status column added to cars table! ✅');
     }
     
     // Check and create reviews table if missing

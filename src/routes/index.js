@@ -6,6 +6,7 @@ import carRoutes from '../modules/cars/cars.routes.js';
 import bookingRoutes from '../modules/bookings/bookings.routes.js';
 import reviewsRoutes from '../modules/reviews/reviews.routes.js';
 import locationsRoutes from '../modules/locations/locations.routes.js';
+import adminRoutes from '../modules/admin/admin.routes.js';
 import healthRoutes from './health.routes.js';
 
 const router = express.Router();
@@ -27,6 +28,7 @@ router.use('/cars', carRoutes);
 router.use('/bookings', bookingRoutes);
 router.use('/reviews', reviewsRoutes);
 router.use('/locations', locationsRoutes);
+router.use('/admin', adminRoutes);
 router.use('/health', healthRoutes);
 
 export default router;

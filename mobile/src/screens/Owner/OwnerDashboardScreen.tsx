@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   RefreshControl,
   ScrollView,
-  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -15,9 +14,6 @@ import {
   Car, 
   Calendar, 
   Clock, 
-  CheckCircle, 
-  XCircle, 
-  ChevronRight, 
   ChevronLeft,
   DollarSign,
   User,
@@ -40,7 +36,6 @@ export default function OwnerDashboardScreen({ navigation }: any) {
   const [bookings, setBookings] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
-  // Double-action protection: track loading state per booking
   const [updatingStatus, setUpdatingStatus] = React.useState<Record<string, boolean>>({});
 
   const fetchBookings = React.useCallback(async (silent = false) => {
@@ -67,9 +62,7 @@ export default function OwnerDashboardScreen({ navigation }: any) {
   };
 
   const handleUpdateStatus = async (bookingId: string, status: string) => {
-    // Double-action protection
     if (updatingStatus[bookingId]) return;
-    
     setUpdatingStatus(prev => ({ ...prev, [bookingId]: true }));
     try {
       await api.patch(`/bookings/${bookingId}/status`, { status });
@@ -96,12 +89,11 @@ export default function OwnerDashboardScreen({ navigation }: any) {
   const stats = React.useMemo(() => {
     const active = bookings.filter(b => b.status === 'in_progress').length;
     const pending = bookings.filter(b => b.status === 'pending').length;
-    const confirmed = bookings.filter(b => b.status === 'confirmed').length;
     const totalEarnings = bookings
       .filter(b => b.status === 'completed')
       .reduce((sum, b) => sum + parseFloat(b.total_price), 0);
 
-    return { active, pending, confirmed, totalEarnings };
+    return { active, pending, totalEarnings };
   }, [bookings]);
 
   const renderStatCard = (label: string, value: string | number, icon: any, color: string) => (
@@ -116,7 +108,6 @@ export default function OwnerDashboardScreen({ navigation }: any) {
     </View>
   );
 
-  // Calculate hours remaining for pending bookings (12h timeout)
   const getHoursRemaining = (createdAt: string) => {
     const created = new Date(createdAt).getTime();
     const now = Date.now();
@@ -129,62 +120,54 @@ export default function OwnerDashboardScreen({ navigation }: any) {
     const hoursRemaining = item.status === 'pending' ? getHoursRemaining(item.created_at) : 0;
     
     return (
-    <View style={styles.bookingCard}>
-      <View style={styles.bookingHeader}>
-        <View>
-          <Text style={styles.carName}>{item.brand} {item.model}</Text>
-          <View style={styles.dateContainer}>
-            <Calendar size={14} color={COLORS.gray[500]} />
-            <Text style={styles.dateText}>
-              {new Date(item.start_date).toLocaleDateString()} - {new Date(item.end_date).toLocaleDateString()}
+      <View style={styles.bookingCard}>
+        <View style={styles.bookingHeader}>
+          <View>
+            <Text style={styles.carName}>{item.brand} {item.model}</Text>
+            <View style={styles.dateContainer}>
+              <Calendar size={14} color={COLORS.gray[500]} />
+              <Text style={styles.dateText}>
+                {new Date(item.start_date).toLocaleDateString()} - {new Date(item.end_date).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '15' }]}>
+            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+              {t(`status.${item.status}`)}
             </Text>
           </View>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '15' }]}>
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {t(`status.${item.status}`)}
-          </Text>
-        </View>
-      </View>
 
-      {/* Pending Timeout Warning */}
-      {item.status === 'pending' && hoursRemaining <= 12 && (
-        <View style={styles.pendingWarning}>
-          <Timer size={16} color={hoursRemaining <= 3 ? COLORS.error : COLORS.warning} />
-          <Text style={[styles.pendingText, { color: hoursRemaining <= 3 ? COLORS.error : COLORS.warning }]}>
-            {hoursRemaining > 0 
-              ? `${t('owner.expires_in')} ${hoursRemaining} ${t('owner.hours')}`
-              : t('owner.waiting_response')
-            }
-          </Text>
-        </View>
-      )}
+        {item.status === 'pending' && hoursRemaining <= 12 && (
+          <View style={styles.pendingWarning}>
+            <Timer size={16} color={hoursRemaining <= 3 ? COLORS.error : COLORS.warning} />
+            <Text style={[styles.pendingText, { color: hoursRemaining <= 3 ? COLORS.error : COLORS.warning }]}>
+              {hoursRemaining > 0 
+                ? `${t('owner.expires_in')} ${hoursRemaining} ${t('owner.hours')}`
+                : t('owner.waiting_response')
+              }
+            </Text>
+          </View>
+        )}
 
-      <View style={styles.renterSection}>
-        <View style={styles.renterInfo}>
-          <User size={16} color={COLORS.gray[600]} />
-          <Text style={styles.renterName}>{item.renter_name}</Text>
+        <View style={styles.renterSection}>
+          <View style={styles.renterInfo}>
+            <User size={16} color={COLORS.gray[600]} />
+            <Text style={styles.renterName}>{item.renter_name}</Text>
+          </View>
+          <View style={styles.renterInfo}>
+            <Phone size={16} color={COLORS.gray[600]} />
+            <Text style={styles.renterPhone}>{item.renter_phone}</Text>
+          </View>
         </View>
-        <View style={styles.renterInfo}>
-          <Phone size={16} color={COLORS.gray[600]} />
-          <Text style={styles.renterPhone}>{item.renter_phone}</Text>
+
+        <View style={styles.priceSection}>
+          <Text style={styles.totalLabel}>{t('booking.total_price')}</Text>
+          <Text style={styles.totalValue}>{parseFloat(item.total_price).toLocaleString()} {t('common.currency')}</Text>
         </View>
-      </View>
 
-      <View style={styles.priceSection}>
-        <Text style={styles.totalLabel}>{t('booking.total_price')}</Text>
-        <Text style={styles.totalValue}>{parseFloat(item.total_price).toLocaleString()} {t('common.currency')}</Text>
-      </View>
-
-      <View style={styles.actionSection}>
-        {item.status === 'pending' && (
-          <>
-            {/* Auto expire note */}
-            {hoursRemaining <= 3 && (
-              <View style={styles.expireNote}>
-                <Text style={styles.expireText}>{t('owner.auto_expire_note')}</Text>
-              </View>
-            )}
+        <View style={styles.actionSection}>
+          {item.status === 'pending' && (
             <View style={styles.actionButtons}>
               <TouchableOpacity 
                 style={[styles.actionButton, styles.rejectButton, updatingStatus[item.id] && styles.disabledButton]} 
@@ -201,29 +184,30 @@ export default function OwnerDashboardScreen({ navigation }: any) {
                 <Text style={styles.acceptButtonText}>{t('booking.accept')}</Text>
               </TouchableOpacity>
             </View>
-          </>
-        )}
-        {item.status === 'confirmed' && (
-          <Button 
-            title={t('booking.start_trip')} 
-            onPress={() => handleUpdateStatus(item.id, 'in_progress')}
-            loading={updatingStatus[item.id]}
-            disabled={updatingStatus[item.id]}
-          />
-        )}
-        {item.status === 'in_progress' && (
-          <Button 
-            title={t('booking.complete_trip')} 
-            onPress={() => handleUpdateStatus(item.id, 'completed')}
-            variant="outline"
-            loading={updatingStatus[item.id]}
-            disabled={updatingStatus[item.id]}
-          />
-        )}
+          )}
+
+          {item.status === 'confirmed' && (
+            <Button 
+              title={t('booking.start_trip')} 
+              onPress={() => handleUpdateStatus(item.id, 'in_progress')}
+              loading={updatingStatus[item.id]}
+              disabled={updatingStatus[item.id]}
+            />
+          )}
+
+          {item.status === 'in_progress' && (
+            <Button 
+              title={t('booking.complete_trip')} 
+              onPress={() => handleUpdateStatus(item.id, 'completed')}
+              variant="outline"
+              loading={updatingStatus[item.id]}
+              disabled={updatingStatus[item.id]}
+            />
+          )}
+        </View>
       </View>
-    </View>
-  );
-};
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -252,49 +236,55 @@ export default function OwnerDashboardScreen({ navigation }: any) {
           />
         </View>
       ) : (
-        <>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
-            style={styles.statsContainer}
-            contentContainerStyle={styles.statsContent}
-          >
-            {renderStatCard(t('owner.stat_pending'), stats.pending, Clock, COLORS.warning)}
-            {renderStatCard(t('owner.stat_active'), stats.active, Car, COLORS.primary)}
-            {renderStatCard(t('owner.earnings'), stats.totalEarnings.toLocaleString(), DollarSign, COLORS.success)}
-          </ScrollView>
-
-          <View style={styles.tabContainer}>
-            {(['requests', 'active', 'history'] as Tab[]).map((tab) => (
-              <TouchableOpacity 
-                key={tab}
-                style={[styles.tab, activeTab === tab && styles.activeTab]}
-                onPress={() => setActiveTab(tab)}
-              >
-                <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-                  {t(`owner.${tab}`)}
-                </Text>
-              </TouchableOpacity>
-            ))}
+        <View style={styles.mainContent}>
+          <View style={styles.statsWrapper}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              style={styles.statsContainer}
+              contentContainerStyle={styles.statsContent}
+            >
+              {renderStatCard(t('owner.stat_pending'), stats.pending, Clock, COLORS.warning)}
+              {renderStatCard(t('owner.stat_active'), stats.active, Car, COLORS.primary)}
+              {renderStatCard(t('owner.earnings'), stats.totalEarnings.toLocaleString(), DollarSign, COLORS.success)}
+            </ScrollView>
           </View>
 
-          <FlatList
-            data={filteredBookings}
-            keyExtractor={(item) => item.id}
-            renderItem={renderBookingItem}
-            contentContainerStyle={styles.listContent}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
-            }
-            ListEmptyComponent={
-              <EmptyState
-                icon={Calendar}
-                title={t(`owner.empty_${activeTab}`)}
-                description={activeTab === 'requests' ? "" : t('profile.no_bookings_desc')}
-              />
-            }
-          />
-        </>
+          <View style={styles.tabSection}>
+            <View style={styles.tabContainer}>
+              {(['requests', 'active', 'history'] as Tab[]).map((tab) => (
+                <TouchableOpacity 
+                  key={tab}
+                  style={[styles.tab, activeTab === tab && styles.activeTab]}
+                  onPress={() => setActiveTab(tab)}
+                >
+                  <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                    {t(`owner.${tab}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <FlatList
+              data={filteredBookings}
+              keyExtractor={(item) => item.id}
+              renderItem={renderBookingItem}
+              contentContainerStyle={styles.listContent}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
+              }
+              ListEmptyComponent={
+                <View style={styles.emptyWrapper}>
+                  <EmptyState
+                    icon={Calendar}
+                    title={t(`owner.empty_${activeTab}`)}
+                    description={activeTab === 'requests' ? "" : t('profile.no_bookings_desc')}
+                  />
+                </View>
+              }
+            />
+          </View>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -342,8 +332,13 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: '600',
   },
+  mainContent: {
+    flex: 1,
+  },
+  statsWrapper: {
+    height: 100,
+  },
   statsContainer: {
-    maxHeight: 100,
     marginTop: SPACING.sm,
   },
   statsContent: {
@@ -360,6 +355,7 @@ const styles = StyleSheet.create({
     marginRight: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.gray[100],
+    minHeight: 70,
   },
   statIconContainer: {
     width: 40,
@@ -376,6 +372,9 @@ const styles = StyleSheet.create({
   statLabel: {
     ...TYPOGRAPHY.caption,
     color: COLORS.text.secondary,
+  },
+  tabSection: {
+    flex: 1,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -404,6 +403,7 @@ const styles = StyleSheet.create({
   listContent: {
     padding: SPACING.md,
     paddingBottom: SPACING.xl,
+    flexGrow: 1,
   },
   bookingCard: {
     backgroundColor: COLORS.white,
@@ -513,7 +513,6 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontWeight: '600',
   },
-  // NEW: Pending timeout styles
   pendingWarning: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -527,18 +526,6 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body2,
     fontWeight: '600',
   },
-  expireNote: {
-    backgroundColor: COLORS.error + '10',
-    padding: SPACING.sm,
-    borderRadius: SIZES.radius.md,
-    marginBottom: SPACING.sm,
-    width: '100%',
-  },
-  expireText: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.error,
-    textAlign: 'center',
-  },
   actionButtons: {
     flexDirection: 'row',
     gap: SPACING.sm,
@@ -546,5 +533,11 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  emptyWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: SPACING.xl * 2,
   },
 });

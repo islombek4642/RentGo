@@ -29,7 +29,7 @@ class CarRepository {
       LEFT JOIN regions r ON c.region_id = r.id
       LEFT JOIN districts d ON c.district_id = d.id
       LEFT JOIN users u ON c.owner_id = u.id
-      WHERE 1=1
+      WHERE c.status = '${CAR_STATUS.APPROVED}' AND c.deleted_at IS NULL
     `;
 
     if (search) {
@@ -78,15 +78,16 @@ class CarRepository {
       query += ` AND c.seats >= $${values.length}`;
     }
 
+    // Get total count for pagination metadata BEFORE adding LIMIT/OFFSET
+    const countQuery = `SELECT COUNT(*) FROM (${query}) AS filtered_cars`;
+    const countResult = await pool.query(countQuery, values);
+    const total = parseInt(countResult.rows[0].count);
+
     // Add sorting and pagination
     query += ` ORDER BY c.created_at DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
     values.push(limit, offset);
 
     const result = await pool.query(query, values);
-
-    // Get total count for pagination metadata
-    const countResult = await pool.query('SELECT COUNT(*) FROM cars');
-    const total = parseInt(countResult.rows[0].count);
 
     return {
       cars: result.rows,
@@ -117,7 +118,7 @@ class CarRepository {
       LEFT JOIN regions r ON c.region_id = r.id
       LEFT JOIN districts d ON c.district_id = d.id
       LEFT JOIN users u ON c.owner_id = u.id
-      WHERE c.id = $1
+      WHERE c.id = $1 AND c.deleted_at IS NULL
     `, [id]);
     return result.rows[0];
   }
@@ -160,7 +161,7 @@ class CarRepository {
         transmission = COALESCE($14, transmission),
         seats = COALESCE($15, seats),
         updated_at = CURRENT_TIMESTAMP 
-      WHERE id = $16 RETURNING *`,
+      WHERE id = $16 AND deleted_at IS NULL RETURNING *`,
       [brand, model, year, price_per_day, location, region_id, district_id, is_available, image_url,
        description, features ? JSON.stringify(features) : null, car_type, fuel_type, transmission, seats, id]
     );
@@ -168,7 +169,7 @@ class CarRepository {
   }
 
   async delete(id) {
-    await pool.query('DELETE FROM cars WHERE id = $1', [id]);
+    await pool.query('UPDATE cars SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
   }
 
   async findAllByOwner(ownerId) {
@@ -179,7 +180,7 @@ class CarRepository {
       FROM cars c
       LEFT JOIN regions r ON c.region_id = r.id
       LEFT JOIN districts d ON c.district_id = d.id
-      WHERE c.owner_id = $1 
+      WHERE c.owner_id = $1 AND c.deleted_at IS NULL
       ORDER BY c.created_at DESC
     `, [ownerId]);
     return result.rows;

@@ -12,10 +12,13 @@ class BookingService {
 
     // Use transaction to ensure data consistency
     return await transaction(async (client) => {
+      // CRITICAL: Prevent Race Condition using Transaction-level Advisory Lock on car_id
+      // This ensures that two concurrent bookings for the same car are processed sequentially
+      await client.query('SELECT pg_advisory_xact_lock($1)', [car_id]);
+
       // 1) Verify car exists and is available
-      // Note: In a real-world scenario, we'd use 'SELECT ... FOR UPDATE' here
       const car = await carService.getCar(car_id, lang);
-      if (!car.is_available) {
+      if (!car.is_available || car.status !== 'approved') {
         throw new AppError(t(lang, 'booking.not_available'), HTTP_STATUS.BAD_REQUEST);
       }
 
@@ -119,7 +122,7 @@ class BookingService {
     }
 
     // Check permissions - only owner, renter, or admin can view
-    const car = await carService.getCar(booking.car_id, lang);
+    const car = await carService.getCar(booking.car_id, lang, { id: userId, role: userRole });
     const isOwner = car.owner_id === userId;
     const isRenter = booking.user_id === userId;
     const isAdmin = userRole === 'admin';
@@ -146,7 +149,7 @@ class BookingService {
     if (!booking) throw new AppError(t(lang, 'booking.not_found'), HTTP_STATUS.NOT_FOUND);
 
     // Get car to check ownership
-    const car = await carService.getCar(booking.car_id, lang);
+    const car = await carService.getCar(booking.car_id, lang, { id: userId, role: userRole });
     const isOwner = car.owner_id === userId;
     const isRenter = booking.user_id === userId;
     const isAdmin = userRole === 'admin';
@@ -201,7 +204,7 @@ class BookingService {
         throw new AppError(t(lang, 'common.forbidden'), HTTP_STATUS.FORBIDDEN);
       }
 
-      const car = await carService.getCar(booking.car_id, lang);
+      const car = await carService.getCar(booking.car_id, lang, { id: userId, role: 'user' }); // role check is already done above
 
       // Validate: end must be strictly after start
       const start = parseDateLocal(newStartDate);

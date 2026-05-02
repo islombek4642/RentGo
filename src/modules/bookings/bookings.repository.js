@@ -105,7 +105,7 @@ class BookingRepository {
     const result = await pool.query(
       `SELECT start_date, end_date, status FROM bookings 
        WHERE car_id = $1 
-       AND status IN ('pending', 'confirmed')
+       AND status IN ('${BOOKING_STATUS.PENDING}', '${BOOKING_STATUS.CONFIRMED}', '${BOOKING_STATUS.IN_PROGRESS}')
        AND end_date >= $2
        ORDER BY start_date ASC`,
       [carId, afterDate]

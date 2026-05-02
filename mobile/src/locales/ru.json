@@ -85,6 +85,10 @@
     "fuel": "Топливо",
     "year": "Год",
     "per_day": "день",
+    "units": {
+      "items": "шт",
+      "year": "г."
+    },
     "insurance": "Полная страховка",
     "instant": "Мгновенное подтверждение",
     "not_available": "Автомобиль недоступен",
@@ -95,7 +99,10 @@
     "placeholder_model": "напр. Malibu",
     "placeholder_year": "2024",
     "placeholder_price": "500000",
-    "placeholder_location": "напр. Ташкент"
+    "placeholder_location": "напр. Ташкент",
+    "transmission": "Трансмиссия",
+    "transmission_manual": "Механика",
+    "transmission_automatic": "Автомат"
   },
   "booking": {
     "title": "Детали бронирования",
@@ -174,6 +181,21 @@
     "dashboard_intro_title": "Начните зарабатывать на аренде",
     "dashboard_intro_desc": "Хотите сдать свой авто в аренду? Зарегистрируйте его сейчас.",
     "start_listing": "Добавить авто"
+  },
+  "regions": {
+    "tashkent": "Ташкент",
+    "samarkand": "Самарканд",
+    "bukhara": "Бухара",
+    "andijan": "Андижан",
+    "namangan": "Наманган",
+    "fergana": "Фергана",
+    "navoi": "Навои",
+    "jizzakh": "Джизак",
+    "kashkadarya": "Кашкадарья",
+    "surkhandarya": "Сурхандарья",
+    "syrdarya": "Сырдарья",
+    "khorezm": "Хорезм",
+    "karakalpakstan": "Каракалпакстан"
   },
   "review": {
     "title": "Оставить отзыв",

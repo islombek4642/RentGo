@@ -85,6 +85,10 @@
     "fuel": "Yoqilg'i",
     "year": "Yili",
     "per_day": "kun",
+    "units": {
+      "items": "ta",
+      "year": "yil"
+    },
     "insurance": "To'liq sug'urta",
     "instant": "Tezkor tasdiqlash",
     "not_available": "Avtomobil mavjud emas",
@@ -101,7 +105,10 @@
     "fuel_petrol": "Benzin",
     "fuel_diesel": "Dizel",
     "fuel_electric": "Elektr",
-    "fuel_hybrid": "Gibrid"
+    "fuel_hybrid": "Gibrid",
+    "transmission": "Transmissiya",
+    "transmission_manual": "Mexanika",
+    "transmission_automatic": "Avtomat"
   },
   "booking": {
     "title": "Band qilish tafsilotlari",
@@ -197,6 +204,21 @@
     "expires_in": "Muddati tugashiga",
     "hours": "soat",
     "auto_expire_note": "Agar 12 soat ichida javob bermasangiz, so'rov avtomatik bekor qilinadi."
+  },
+  "regions": {
+    "tashkent": "Toshkent",
+    "samarkand": "Samarqand",
+    "bukhara": "Buxoro",
+    "andijan": "Andijon",
+    "namangan": "Namangan",
+    "fergana": "Farg'ona",
+    "navoi": "Navoiy",
+    "jizzakh": "Jizzax",
+    "kashkadarya": "Qashqadaryo",
+    "surkhandarya": "Surxondaryo",
+    "syrdarya": "Sirdaryo",
+    "khorezm": "Xorazm",
+    "karakalpakstan": "Qoraqalpog'iston"
   },
   "review": {
     "title": "Fikr qoldirish",

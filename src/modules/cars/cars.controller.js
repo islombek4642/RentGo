@@ -21,7 +21,7 @@ class CarController {
   });
 
   getCar = asyncHandler(async (req, res) => {
-    const car = await carService.getCar(req.params.id, req.lang);
+    const car = await carService.getCar(req.params.id, req.lang, req.user);
     res.status(HTTP_STATUS.OK).json({
       status: 'success',
       data: { car },
@@ -48,7 +48,7 @@ class CarController {
       carData.image_url = req.file.path;
     }
 
-    const car = await carService.updateCar(req.params.id, req.user.id, carData, req.lang);
+    const car = await carService.updateCar(req.params.id, req.user, carData, req.lang);
     res.status(HTTP_STATUS.OK).json({
       status: 'success',
       data: { car },

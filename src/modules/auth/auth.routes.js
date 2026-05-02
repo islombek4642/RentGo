@@ -2,6 +2,7 @@ import express from 'express';
 import authController from './auth.controller.js';
 import validate from '../../middleware/validate.middleware.js';
 import { registerSchema, loginSchema, refreshSchema } from './auth.validation.js';
+import { authLimiter } from '../../middleware/security.middleware.js';
 
 const router = express.Router();
 
@@ -54,7 +55,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/register', validate(registerSchema), authController.register);
+router.post('/register', authLimiter, validate(registerSchema), authController.register);
 
 /**
  * @swagger
@@ -92,7 +93,7 @@ router.post('/register', validate(registerSchema), authController.register);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/login', validate(loginSchema), authController.login);
+router.post('/login', authLimiter, validate(loginSchema), authController.login);
 
 /**
  * @swagger

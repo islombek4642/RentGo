@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS cars (
     price_per_day DECIMAL(10, 2) NOT NULL,
     location VARCHAR(255) NOT NULL,
     is_available BOOLEAN DEFAULT TRUE,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
     image_url TEXT,
     -- NEW: Enhanced car details
     description TEXT,

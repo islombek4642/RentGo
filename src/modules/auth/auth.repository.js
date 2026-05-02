@@ -4,8 +4,8 @@ class AuthRepository {
   async findByPhone(phone) {
     const result = await pool.query(
       `SELECT u.*, 
-        (SELECT COUNT(*) FROM cars WHERE owner_id = u.id) as car_count
-       FROM users u WHERE phone = $1`,
+        (SELECT COUNT(*) FROM cars WHERE owner_id = u.id AND deleted_at IS NULL) as car_count
+       FROM users u WHERE phone = $1 AND deleted_at IS NULL`,
       [phone]
     );
     return result.rows[0];
@@ -22,9 +22,9 @@ class AuthRepository {
 
   async findById(id) {
     const result = await pool.query(
-      `SELECT id, name, phone, role, created_at,
-        (SELECT COUNT(*) FROM cars WHERE owner_id = $1) as car_count
-       FROM users WHERE id = $1`,
+      `SELECT id, name, phone, role, token_version, created_at,
+        (SELECT COUNT(*) FROM cars WHERE owner_id = $1 AND deleted_at IS NULL) as car_count
+       FROM users WHERE id = $1 AND deleted_at IS NULL`,
       [id]
     );
     return result.rows[0];

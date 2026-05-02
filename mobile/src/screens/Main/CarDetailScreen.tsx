@@ -129,7 +129,14 @@ export default function CarDetailScreen({ route, navigation }: Props) {
 
         <View style={styles.content}>
           <View style={styles.header}>
-            <View>
+            <View style={{ flex: 1 }}>
+              {car.car_type && (
+                <View style={styles.categoryBadge}>
+                  <Text style={styles.categoryBadgeText}>
+                    {t(`filters.${car.car_type.toLowerCase()}`, { defaultValue: car.car_type })}
+                  </Text>
+                </View>
+              )}
               <Text style={styles.brand}>{car.brand}</Text>
               <Text style={styles.title}>{car.model}</Text>
             </View>
@@ -149,7 +156,14 @@ export default function CarDetailScreen({ route, navigation }: Props) {
             </View>
             <View style={styles.locationContainer}>
               <MapPin size={16} color={COLORS.gray[500]} />
-              <Text style={styles.locationText}>{car.location}</Text>
+              <Text style={styles.locationText}>
+                {(() => {
+                  const loc = (car.location || '').trim();
+                  if (!loc) return t('common.not_available');
+                  const translated = t(`regions.${loc.toLowerCase()}`);
+                  return translated.startsWith('regions.') ? loc : translated;
+                })()}
+              </Text>
             </View>
           </View>
 
@@ -210,22 +224,41 @@ export default function CarDetailScreen({ route, navigation }: Props) {
               <View style={styles.iconBox}>
                 <Users size={20} color={COLORS.primary} />
               </View>
-              <Text style={styles.specLabel}>{t('car.seats')}</Text>
-              <Text style={styles.specValue}>{car.seats || 5} {t('car.seats')}</Text>
+              <View style={styles.specInfo}>
+                <Text style={styles.specLabel}>{t('car.seats')}</Text>
+                <Text style={styles.specValue}>{car.seats || 5} {t('car.units.items')}</Text>
+              </View>
             </View>
             <View style={styles.specItem}>
               <View style={styles.iconBox}>
                 <Fuel size={20} color={COLORS.primary} />
               </View>
-              <Text style={styles.specLabel}>{t('car.fuel')}</Text>
-              <Text style={styles.specValue}>{t(`car.fuel_${car.fuel_type || 'petrol'}`)}</Text>
+              <View style={styles.specInfo}>
+                <Text style={styles.specLabel}>{t('car.fuel')}</Text>
+                <Text style={styles.specValue}>{t(`car.fuel_${car.fuel_type?.toLowerCase() || 'petrol'}`)}</Text>
+              </View>
             </View>
             <View style={styles.specItem}>
               <View style={styles.iconBox}>
                 <Settings size={20} color={COLORS.primary} />
               </View>
-              <Text style={styles.specLabel}>{t('car.year')}</Text>
-              <Text style={styles.specValue}>{car.year}</Text>
+              <View style={styles.specInfo}>
+                <Text style={styles.specLabel}>{t('car.transmission')}</Text>
+                <Text style={styles.specValue}>
+                  {car.transmission?.toLowerCase() === 'manual' 
+                    ? t('car.transmission_manual') 
+                    : t('car.transmission_automatic')}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.specItem}>
+              <View style={styles.iconBox}>
+                <Calendar size={20} color={COLORS.primary} />
+              </View>
+              <View style={styles.specInfo}>
+                <Text style={styles.specLabel}>{t('car.year')}</Text>
+                <Text style={styles.specValue}>{car.year} {t('car.units.year')}</Text>
+              </View>
             </View>
           </View>
 
@@ -356,10 +389,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 1,
+    marginTop: 4,
   },
   title: {
     ...TYPOGRAPHY.h1,
     color: COLORS.text.primary,
+  },
+  categoryBadge: {
+    backgroundColor: COLORS.primary + '10',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '20',
+    alignSelf: 'flex-start',
+    marginBottom: 4,
+  },
+  categoryBadgeText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.primary,
+    fontWeight: '700',
+    fontSize: 10,
+    textTransform: 'uppercase',
   },
   priceContainer: {
     alignItems: 'flex-end',
@@ -413,15 +464,19 @@ const styles = StyleSheet.create({
   },
   specsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: SPACING.md,
     marginBottom: SPACING.xl,
   },
   specItem: {
-    width: (width - 64) / 3,
+    width: (width - SPACING.lg * 2 - SPACING.md) / 2,
     padding: SPACING.md,
     backgroundColor: COLORS.gray[50],
     borderRadius: SIZES.radius.md,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
   iconBox: {
     width: 40,
@@ -430,7 +485,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+  },
+  specInfo: {
+    flex: 1,
   },
   specLabel: {
     ...TYPOGRAPHY.caption,
