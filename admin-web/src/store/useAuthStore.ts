@@ -14,15 +14,33 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
-  setAuth: (user, token) => {
-    localStorage.setItem('token', token);
-    set({ user, token });
-  },
-  logout: () => {
-    localStorage.removeItem('token');
-    set({ user: null, token: null });
-  },
-}));
+export const useAuthStore = create<AuthState>((set) => {
+  // Initialize state from localStorage if available
+  const savedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const savedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+  
+  let initialUser = null;
+  try {
+    if (savedUser) initialUser = JSON.parse(savedUser);
+  } catch (e) {
+    console.error('Failed to parse saved user:', e);
+  }
+
+  return {
+    user: initialUser,
+    token: savedToken,
+    setAuth: (user, token) => {
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      set({ user, token });
+    },
+    logout: () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      set({ user: null, token: null });
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    },
+  };
+});
