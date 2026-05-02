@@ -34,7 +34,7 @@ app.use(langMiddleware);
 
 // Request logging (production visibility)
 if (process.env.NODE_ENV === 'production') {
-  app.use(requestLogger);
+  app.use(morgan('combined'));
 }
 
 import pool from './config/db.js';
