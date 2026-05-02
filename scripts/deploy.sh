@@ -145,6 +145,7 @@ else
 fi
 
 echo -e "🔗 ${YELLOW}Admin Panel:${NC} ${BASE_URL}/"
+echo -e "🔗 ${YELLOW}API Documentation:${NC} ${BASE_URL}/api-docs"
 echo -e "🔗 ${YELLOW}Backend API (Healthcheck):${NC} ${BASE_URL}/api/v1/health"
 echo ""
 

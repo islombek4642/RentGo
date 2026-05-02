@@ -10,7 +10,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ENV NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+ENV NEXT_PUBLIC_API_URL=/api/v1
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
