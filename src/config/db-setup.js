@@ -63,12 +63,11 @@ const ensureDatabaseExists = async () => {
  * 2. Checks if the database is empty -> Seeds if so.
  */
 export const setupDatabase = async () => {
-  // Safeguard: Only run in development and if flag is set
-  const isDev = config.env === 'development';
+  // Allow auto-init if explicitly requested via env variable, even in production
   const autoInit = process.env.AUTO_DB_INIT === 'true';
 
-  if (!isDev || !autoInit) {
-    logger.debug('Database auto-initialization skipped (Production or AUTO_DB_INIT=false)');
+  if (!autoInit) {
+    logger.debug('Database auto-initialization skipped (AUTO_DB_INIT is not true)');
     return;
   }
 

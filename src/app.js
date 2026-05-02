@@ -11,6 +11,9 @@ import { config } from './config/env.js';
 
 const app = express();
 
+// Trust Nginx proxy for rate limiting and IP detection
+app.set('trust proxy', 1);
+
 // 1) GLOBAL MIDDLEWARES
 // Serve static upload files
 app.use('/uploads', express.static(config.uploadPath));
