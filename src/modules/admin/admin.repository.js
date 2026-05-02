@@ -1,4 +1,5 @@
 import pool from '../../config/db.js';
+import { BOOKING_STATUS } from '../../constants/index.js';
 
 class AdminRepository {
   async findAllUsers({ page, limit, role, is_verified }) {
