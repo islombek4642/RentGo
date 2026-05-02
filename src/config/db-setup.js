@@ -110,12 +110,33 @@ export const setupDatabase = async () => {
       SELECT 
         EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'region_id') as has_region_id,
         EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'car_type') as has_car_type,
-        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'status') as has_status
+        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cars' AND column_name = 'status') as has_status,
+        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'deleted_at') as has_deleted_at,
+        EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'is_active') as has_is_active
     `);
     
     const hasRegionIdColumn = columnCheck.rows[0].has_region_id === true || columnCheck.rows[0].has_region_id === 't';
     const hasCarTypeColumn = columnCheck.rows[0].has_car_type === true || columnCheck.rows[0].has_car_type === 't';
     const hasStatusColumn = columnCheck.rows[0].has_status === true || columnCheck.rows[0].has_status === 't';
+    const hasDeletedAt = columnCheck.rows[0].has_deleted_at === true || columnCheck.rows[0].has_deleted_at === 't';
+    const hasIsActive = columnCheck.rows[0].has_is_active === true || columnCheck.rows[0].has_is_active === 't';
+    
+    if (!hasDeletedAt) {
+      logger.info('Adding missing deleted_at columns for soft deletes...');
+      await pool.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+        ALTER TABLE cars ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+        ALTER TABLE bookings ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+        ALTER TABLE reviews ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+      `);
+      logger.info('Soft-delete columns added! ✅');
+    }
+
+    if (!hasIsActive) {
+      logger.info('Adding missing is_active column to users table...');
+      await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE');
+      logger.info('is_active column added! ✅');
+    }
     
     if (!hasRegionIdColumn) {
       logger.info('Adding missing location columns to cars table...');

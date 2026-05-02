@@ -9,9 +9,11 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
     is_verified BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
     license_image_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
 -- Regions Table
@@ -57,7 +59,8 @@ CREATE TABLE IF NOT EXISTS cars (
     transmission VARCHAR(50) DEFAULT 'automatic' CHECK (transmission IN ('automatic', 'manual')),
     seats INTEGER DEFAULT 5,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
 -- Bookings Table
@@ -71,6 +74,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'in_progress', 'cancelled', 'rejected', 'completed')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     CONSTRAINT check_dates CHECK (end_date > start_date)
 );
 
@@ -104,6 +108,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
     comment TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     CONSTRAINT one_review_per_booking UNIQUE(booking_id, reviewer_id)
 );
 
