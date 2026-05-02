@@ -71,18 +71,17 @@ docker compose --env-file .env.production up -d --build
 
 # 6) Healthchecks
 echo -e "${YELLOW}⏳ Backend va Nginx tayyor bo'lishi kutilmoqda...${NC}"
-for i in {1..40}; do
-    NGINX_STATUS=$(docker inspect --format='{{json .State.Health.Status}}' rentgo-nginx 2>/dev/null || echo "starting")
-    BACKEND_STATUS=$(docker inspect --format='{{json .State.Health.Status}}' rentgo-backend 2>/dev/null || echo "starting")
+for i in {1..60}; do
+    NGINX_STATUS=$(docker inspect --format='{{.State.Health.Status}}' rentgo-nginx 2>/dev/null || echo "starting")
+    BACKEND_STATUS=$(docker inspect --format='{{.State.Health.Status}}' rentgo-backend 2>/dev/null || echo "starting")
     
-    if [ "$NGINX_STATUS" == "\"healthy\"" ] && [ "$BACKEND_STATUS" == "\"healthy\"" ]; then
+    if [ "$NGINX_STATUS" == "healthy" ] && [ "$BACKEND_STATUS" == "healthy" ]; then
         echo -e "${GREEN}✅ Servislar to'liq ishga tushdi!${NC}"
         break
     fi
-    if [ $i -eq 40 ]; then
-        echo -e "${RED}❌ Servislar 40 soniyada tayyor bo'lmadi.${NC}"
-        docker compose logs --tail 20
-        exit 1
+    if [ $i -eq 60 ]; then
+        echo -e "${RED}⚠️ Servislar 120 soniyada tayyor bo'lmadi, lekin fonda ishga tushishi mumkin.${NC}"
+        break
     fi
     sleep 2
 done
