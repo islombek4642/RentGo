@@ -10,7 +10,7 @@ export const usePermission = () => {
     
     const permissions = ROLE_PERMISSIONS[user.role] || [];
     
-    return permissions.includes('*') || (permissions as Permission[]).includes(permission);
+    return (permissions as string[]).includes('*') || (permissions as Permission[]).includes(permission);
   };
 
   return { hasPermission, role: user?.role };
