@@ -9,6 +9,21 @@ export const ROLES = {
 
 export type Role = typeof ROLES[keyof typeof ROLES];
 
+export const BOOKING_STATUS = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  IN_PROGRESS: 'in_progress',
+  CANCELLED: 'cancelled',
+  REJECTED: 'rejected',
+  COMPLETED: 'completed'
+} as const;
+
+export const CAR_STATUS = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected'
+} as const;
+
 export const PERMISSIONS = {
   // Users
   USER_VIEW: 'user.view',
