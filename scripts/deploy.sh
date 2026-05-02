@@ -132,4 +132,21 @@ echo ""
 echo -e "${GREEN}============================================${NC}"
 echo -e "${GREEN}  ✅ Tizim muvaffaqiyatli ishga tushdi!${NC}"
 echo -e "${GREEN}============================================${NC}"
+
+# Avtomatik linklarni aniqlash va chiqarish
+if [ -z "$DOMAIN" ] || [ "$DOMAIN" == "localhost" ]; then
+    PUBLIC_IP=$(curl -s ifconfig.me || echo "SIZNING_IP_MANZILINGIZ")
+    BASE_URL="http://${PUBLIC_IP}:8080"
+else
+    if [ "$SSL_ENABLED" -eq 1 ]; then
+        BASE_URL="https://${DOMAIN}:8443"
+    else
+        BASE_URL="http://${DOMAIN}:8080"
+    fi
+fi
+
+echo -e "🔗 ${YELLOW}Admin Panel:${NC} ${BASE_URL}/"
+echo -e "🔗 ${YELLOW}Backend API (Healthcheck):${NC} ${BASE_URL}/api/v1/health"
+echo ""
+
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
