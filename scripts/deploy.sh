@@ -115,7 +115,7 @@ if [ "$SSL_ENABLED" -eq 1 ] && [ "$NEEDS_CERT" -eq 1 ]; then
 fi
 
 # 8) Setup Host-based Auto-Renewal Cron Job with Deploy Hook
-if [ "$SSL_ENABLED" -eq 1 ] && [ "$NEEDS_CERT" -eq 0 ] || [ "$NEEDS_CERT" -eq 1 ]; then
+if [ "${SSL_ENABLED:-0}" -eq 1 ]; then
     echo -e "${YELLOW}⏳ SSL avto-yangilash (Cron) sozlanmoqda...${NC}"
     # Deploy hook reloads nginx container automatically after successful renewal
     CRON_CMD="0 */12 * * * cd $(pwd) && docker compose run --rm certbot renew --quiet --deploy-hook \"docker exec rentgo-nginx nginx -s reload\""
