@@ -1,13 +1,15 @@
 import express from 'express';
 import adminController from './admin.controller.js';
 import { protect } from '../../middleware/auth.middleware.js';
+import { adminLimiter } from '../../middleware/security.middleware.js';
 import { hasPermission } from '../../middleware/permission.middleware.js';
 import { PERMISSIONS } from '../../constants/index.js';
 
 const router = express.Router();
 
-// All routes require authentication
+// All routes require authentication and rate limiting
 router.use(protect);
+router.use(adminLimiter);
 
 /**
  * @swagger

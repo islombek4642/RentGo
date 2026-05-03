@@ -8,37 +8,37 @@ import cors from 'cors';
  */
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 200, // Increased for legitimate asset-heavy usage
   message: {
     status: 'error',
-    message: 'Juda ko\'p so\'rov yuborildi. Iltimos, 15 daqiqadan so\'ng urinib ko\'ring.'
+    message: 'Juda ko\'p so\'rov yuborildi. Iltimos, birozdan so\'ng urinib ko\'ring.'
   },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 /**
- * Auth specific Rate Limiter
+ * Auth specific Rate Limiter - STRICT
  */
 export const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 5,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Only 5 attempts per 15 mins
   message: {
     status: 'error',
-    message: 'Kirish uchun juda ko\'p urinishlar bajarildi. Iltimos, bir soatdan so\'ng urinib ko\'ring.'
+    message: 'Kirish uchun juda ko\'p urinishlar. Iltimos, 15 daqiqadan so\'ng urinib ko\'ring.'
   },
-  skipSuccessfulRequests: true
+  skipSuccessfulRequests: false // Don't allow brute force even if they might hit one success
 });
 
 /**
- * Booking specific Rate Limiter
+ * Admin Action Rate Limiter - DEFENSIVE
  */
-export const bookingLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 3,
+export const adminLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 50,
   message: {
     status: 'error',
-    message: 'Siz juda ko\'p bandlov yaratdingiz. Iltimos, birozdan so\'ng urinib ko\'ring.'
+    message: 'Admin amallari uchun limitga yetdingiz.'
   }
 });
 
@@ -50,7 +50,7 @@ export const passwordChangeLimiter = rateLimit({
   max: 3,
   message: {
     status: 'error',
-    message: 'Parolni o\'zgartirish uchun juda ko\'p urinishlar. Iltimos, bir soatdan so\'ng urinib ko\'ring.'
+    message: 'Parolni o\'zgartirish uchun juda ko\'p urinishlar.'
   }
 });
 
