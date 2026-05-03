@@ -19,6 +19,17 @@ export const runSeedData = async (pool) => {
       ALTER TABLE users 
       ADD CONSTRAINT users_role_check 
       CHECK (role IN ('user', 'owner', 'support', 'moderator', 'admin', 'super_admin'));
+
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id),
+        action VARCHAR(255) NOT NULL,
+        resource VARCHAR(255),
+        resource_id VARCHAR(255),
+        details JSONB,
+        ip_address VARCHAR(45),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // 1) Ensure Super Admin exists

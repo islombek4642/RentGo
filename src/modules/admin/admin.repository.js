@@ -146,7 +146,7 @@ class AdminRepository {
     const query = `
       SELECT r.*, u.name as user_name, c.brand, c.model
       FROM reviews r
-      JOIN users u ON r.user_id = u.id
+      JOIN users u ON r.reviewer_id = u.id
       JOIN cars c ON r.car_id = c.id
       ORDER BY r.created_at DESC
       LIMIT $1 OFFSET $2
