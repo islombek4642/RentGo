@@ -20,6 +20,25 @@ class UserController {
     });
   });
 
+  changePassword = asyncHandler(async (req, res) => {
+    const { current_password, new_password, confirm_password } = req.body;
+
+    if (new_password !== confirm_password) {
+      throw new AppError('Yangi parollar bir-biriga mos kelmadi', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    if (new_password.length < 8) {
+      throw new AppError('Parol kamida 8 ta belgidan iborat bo\'lishi kerak', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    await userService.changePassword(req.user.id, { current_password, new_password }, req.lang);
+
+    res.status(HTTP_STATUS.OK).json({
+      status: 'success',
+      message: 'Parol muvaffaqiyatli o\'zgartirildi',
+    });
+  });
+
   uploadLicense = asyncHandler(async (req, res) => {
     if (!req.file) {
       throw new AppError('Please provide a license image', HTTP_STATUS.BAD_REQUEST);

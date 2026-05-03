@@ -11,14 +11,26 @@ export const runSeedData = async (pool) => {
   logger.info('Running idempotent database seeding...');
 
   try {
-    // 1) Ensure Admin exists
-    const adminExists = await pool.query('SELECT id FROM users WHERE phone = $1 AND deleted_at IS NULL', ['+998901234567']);
-    if (adminExists.rows.length === 0) {
-      const adminPassword = await bcrypt.hash(config.seeding.adminPassword, SYSTEM_CONFIG.BCRYPT_SALT_ROUNDS);
-      await pool.query(
-        `INSERT INTO users (name, phone, password, role) VALUES ($1, $2, $3, $4)`,
-        ['System Admin', '+998901234567', adminPassword, ROLES.ADMIN]
-      );
+    // 1) Ensure Super Admin exists
+    const superAdminExists = await pool.query('SELECT id FROM users WHERE role = $1 AND deleted_at IS NULL', [ROLES.SUPER_ADMIN]);
+    
+    if (superAdminExists.rows.length === 0) {
+      logger.info('No Super Admin found. Checking default phone availability...');
+      const phone = '+998901234567';
+      const userByPhone = await pool.query('SELECT id, role FROM users WHERE phone = $1 AND deleted_at IS NULL', [phone]);
+
+      if (userByPhone.rows.length > 0) {
+        logger.info(`User with phone ${phone} exists but is not Super Admin. Promoting to Super Admin...`);
+        await pool.query('UPDATE users SET role = $1 WHERE id = $2', [ROLES.SUPER_ADMIN, userByPhone.rows[0].id]);
+      } else {
+        logger.info('Creating default Super Admin...');
+        const adminPassword = await bcrypt.hash(config.seeding.adminPassword, SYSTEM_CONFIG.BCRYPT_SALT_ROUNDS);
+        await pool.query(
+          `INSERT INTO users (name, phone, password, role) VALUES ($1, $2, $3, $4)`,
+          ['Super Admin', phone, adminPassword, ROLES.SUPER_ADMIN]
+        );
+      }
+      logger.info('Super Admin setup completed! 🛡️');
     }
 
     // 2) Ensure Regular User exists

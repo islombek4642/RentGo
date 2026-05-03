@@ -43,6 +43,18 @@ export const bookingLimiter = rateLimit({
 });
 
 /**
+ * Password change specific Rate Limiter
+ */
+export const passwordChangeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  message: {
+    status: 'error',
+    message: 'Parolni o\'zgartirish uchun juda ko\'p urinishlar. Iltimos, bir soatdan so\'ng urinib ko\'ring.'
+  }
+});
+
+/**
  * Main security setup for Express app
  */
 export const securityMiddleware = (app) => {

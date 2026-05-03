@@ -8,8 +8,10 @@ class AdminRepository {
     let query = 'SELECT id, name, phone, role, is_verified, license_image_url, is_active, created_at FROM users WHERE deleted_at IS NULL';
 
     if (role) {
-      values.push(role);
-      query += ` AND role = $${values.length}`;
+      const roles = role.split(',');
+      const placeholders = roles.map((_, i) => `$${values.length + i + 1}`).join(',');
+      query += ` AND role IN (${placeholders})`;
+      values.push(...roles);
     }
     if (is_verified !== undefined) {
       values.push(is_verified);
@@ -138,12 +140,69 @@ class AdminRepository {
   async deleteReview(reviewId) {
     await pool.query('DELETE FROM reviews WHERE id = $1', [reviewId]);
   }
+  
+  async findAllReviews({ page, limit }) {
+    const offset = (page - 1) * limit;
+    const query = `
+      SELECT r.*, u.name as user_name, c.brand, c.model
+      FROM reviews r
+      JOIN users u ON r.user_id = u.id
+      JOIN cars c ON r.car_id = c.id
+      ORDER BY r.created_at DESC
+      LIMIT $1 OFFSET $2
+    `;
+    const countResult = await pool.query('SELECT COUNT(*) FROM reviews');
+    const total = parseInt(countResult.rows[0].count);
+    const result = await pool.query(query, [limit, offset]);
+    
+    return {
+      reviews: result.rows,
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
+    };
+  }
 
-  async getSuperAdminCount() {
-    const result = await pool.query(
-      "SELECT COUNT(*) FROM users WHERE role = 'super_admin' AND deleted_at IS NULL AND is_active = TRUE"
-    );
-    return parseInt(result.rows[0].count);
+  async getAnalytics() {
+    const revenueQuery = `
+      SELECT DATE_TRUNC('day', created_at) as date, SUM(total_price) as revenue
+      FROM bookings
+      WHERE status = 'completed' AND deleted_at IS NULL
+      GROUP BY 1 ORDER BY 1 DESC LIMIT 30
+    `;
+    
+    const bookingsQuery = `
+      SELECT status, COUNT(*) as count
+      FROM bookings
+      WHERE deleted_at IS NULL
+      GROUP BY status
+    `;
+    
+    const userGrowthQuery = `
+      SELECT DATE_TRUNC('day', created_at) as date, COUNT(*) as count
+      FROM users
+      WHERE deleted_at IS NULL
+      GROUP BY 1 ORDER BY 1 DESC LIMIT 30
+    `;
+    
+    const carDistributionQuery = `
+      SELECT car_type, COUNT(*) as count
+      FROM cars
+      WHERE deleted_at IS NULL
+      GROUP BY car_type
+    `;
+
+    const [revenue, bookings, growth, cars] = await Promise.all([
+      pool.query(revenueQuery),
+      pool.query(bookingsQuery),
+      pool.query(userGrowthQuery),
+      pool.query(carDistributionQuery)
+    ]);
+
+    return {
+      revenue: revenue.rows.reverse(),
+      bookings: bookings.rows,
+      userGrowth: growth.rows.reverse(),
+      carDistribution: cars.rows
+    };
   }
 }
 

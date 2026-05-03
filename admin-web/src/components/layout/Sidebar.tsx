@@ -10,6 +10,7 @@ import {
   Star, 
   ShieldCheck, 
   History,
+  Settings,
   LogOut 
 } from 'lucide-react';
 import { usePermission } from '@/hooks/usePermission';
@@ -65,6 +66,12 @@ const SIDEBAR_ITEMS = [
     icon: History, 
     permission: PERMISSIONS.AUDIT_VIEW 
   },
+  { 
+    name: 'Sozlamalar', 
+    href: '/settings', 
+    icon: Settings, 
+    permission: null 
+  },
 ];
 
 export default function Sidebar() {
@@ -80,7 +87,7 @@ export default function Sidebar() {
 
       <nav className="flex-1 px-4 space-y-2">
         {SIDEBAR_ITEMS.map((item) => {
-          if (!hasPermission(item.permission as any)) return null;
+          if (item.permission && !hasPermission(item.permission as any)) return null;
 
           const isActive = pathname === item.href;
 

@@ -11,25 +11,51 @@ class AuditRepository {
     return result.rows[0];
   }
 
-  async findAll({ page, limit, user_id, action }) {
+  async findAll({ page, limit, user_id, action, resource_id, ip_address, date_from, date_to }) {
     const offset = (page - 1) * limit;
     const values = [];
     let query = 'SELECT al.*, u.name as user_name FROM audit_logs al LEFT JOIN users u ON al.user_id = u.id WHERE 1=1';
+    let countQuery = 'SELECT COUNT(*) FROM audit_logs al WHERE 1=1';
 
-    if (user_id) {
-      values.push(user_id);
-      query += ` AND al.user_id = $${values.length}`;
+    const addFilter = (condition, value) => {
+      if (value) {
+        values.push(value);
+        const clause = ` AND ${condition} $${values.length}`;
+        query += clause;
+        countQuery += clause;
+      }
+    };
+
+    addFilter('al.user_id =', user_id);
+    addFilter('al.action =', action);
+    addFilter('al.resource_id =', resource_id);
+    addFilter('al.ip_address =', ip_address);
+
+    if (date_from) {
+      values.push(date_from);
+      const clause = ` AND al.created_at >= $${values.length}`;
+      query += clause;
+      countQuery += clause;
     }
-    if (action) {
-      values.push(action);
-      query += ` AND al.action = $${values.length}`;
+    if (date_to) {
+      values.push(date_to);
+      const clause = ` AND al.created_at <= $${values.length}`;
+      query += clause;
+      countQuery += clause;
     }
+
+    const countResult = await pool.query(countQuery, values);
+    const total = parseInt(countResult.rows[0].count);
 
     query += ` ORDER BY al.created_at DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
     values.push(limit, offset);
 
     const result = await pool.query(query, values);
-    return result.rows;
+    
+    return {
+      logs: result.rows,
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
+    };
   }
 }
 

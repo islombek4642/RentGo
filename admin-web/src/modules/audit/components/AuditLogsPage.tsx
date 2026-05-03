@@ -12,12 +12,30 @@ export default function AuditLogsPage() {
     limit: 20,
     user_id: '',
     action: '',
+    resource_id: '',
+    ip_address: '',
+    date_from: '',
+    date_to: '',
   });
 
   const { data: response, isLoading } = useAuditLogs(filters);
   const logs = response?.data?.logs || [];
+  const pagination = response?.data?.pagination;
 
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
+
+  const resetFilters = () => {
+    setFilters({
+      page: 1,
+      limit: 20,
+      user_id: '',
+      action: '',
+      resource_id: '',
+      ip_address: '',
+      date_from: '',
+      date_to: '',
+    });
+  };
 
   const getActionColor = (action: string) => {
     if (action.includes('DELETE')) return 'danger';
@@ -36,33 +54,98 @@ export default function AuditLogsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-wrap gap-4 items-center">
-        <div className="flex-1 min-w-[200px]">
-          <select
-            className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-            value={filters.action}
-            onChange={(e) => setFilters({ ...filters, action: e.target.value, page: 1 })}
-          >
-            <option value="">Barcha amallar</option>
-            <option value="USER_VERIFY">Foydalanuvchini tasdiqlash</option>
-            <option value="USER_DELETE">Foydalanuvchini o'chirish</option>
-            <option value="USER_ROLE_UPDATE">Rolni o'zgartirish</option>
-            <option value="CAR_APPROVE">Avtomobilni tasdiqlash</option>
-            <option value="CAR_REJECT">Avtomobilni rad etish</option>
-            <option value="BOOKING_STATUS_UPDATE">Buyurtmani boshqarish</option>
-            <option value="REVIEW_DELETE">Sharhni o'chirish</option>
-          </select>
+      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Amal turi</label>
+            <select
+              className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
+              value={filters.action}
+              onChange={(e) => setFilters({ ...filters, action: e.target.value, page: 1 })}
+            >
+              <option value="">Barcha amallar</option>
+              <option value="USER_VERIFY">Foydalanuvchini tasdiqlash</option>
+              <option value="USER_DELETE">Foydalanuvchini o'chirish</option>
+              <option value="USER_ROLE_UPDATE">Rolni o'zgartirish</option>
+              <option value="CAR_APPROVE">Avtomobilni tasdiqlash</option>
+              <option value="CAR_REJECT">Avtomobilni rad etish</option>
+              <option value="BOOKING_STATUS_UPDATE">Buyurtmani boshqarish</option>
+              <option value="REVIEW_DELETE">Sharhni o'chirish</option>
+            </select>
+          </div>
+          
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Admin ID</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input
+                type="text"
+                placeholder="Admin ID..."
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
+                value={filters.user_id}
+                onChange={(e) => setFilters({ ...filters, user_id: e.target.value, page: 1 })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Resurs ID</label>
+            <div className="relative">
+              <Terminal className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input
+                type="text"
+                placeholder="Resurs ID..."
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
+                value={filters.resource_id}
+                onChange={(e) => setFilters({ ...filters, resource_id: e.target.value, page: 1 })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase ml-1">IP Manzil</label>
+            <div className="relative">
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input
+                type="text"
+                placeholder="IP manzil..."
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
+                value={filters.ip_address}
+                onChange={(e) => setFilters({ ...filters, ip_address: e.target.value, page: 1 })}
+              />
+            </div>
+          </div>
         </div>
-        
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input
-            type="text"
-            placeholder="Admin ID bo'yicha..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-            value={filters.user_id}
-            onChange={(e) => setFilters({ ...filters, user_id: e.target.value, page: 1 })}
-          />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Sana (dan)</label>
+            <input
+              type="date"
+              className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
+              value={filters.date_from}
+              onChange={(e) => setFilters({ ...filters, date_from: e.target.value, page: 1 })}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Sana (gacha)</label>
+            <input
+              type="date"
+              className="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
+              value={filters.date_to}
+              onChange={(e) => setFilters({ ...filters, date_to: e.target.value, page: 1 })}
+            />
+          </div>
+
+          <div className="lg:col-span-2 flex justify-end">
+            <button
+              onClick={resetFilters}
+              className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors text-sm"
+            >
+              Filtrlarni tozalash
+            </button>
+          </div>
         </div>
       </div>
 
@@ -98,7 +181,9 @@ export default function AuditLogsPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <Shield size={14} className="mr-2 text-indigo-500" />
-                      <span className="font-medium text-slate-900">{log.user_name || 'Tizim'}</span>
+                      <span className="font-medium text-slate-900 truncate max-w-[150px]" title={log.user_id}>
+                        {log.user_name || 'Tizim'}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -109,7 +194,7 @@ export default function AuditLogsPage() {
                   <td className="px-6 py-4 text-xs font-mono text-slate-400">
                     <div className="flex items-center">
                       <Terminal size={14} className="mr-2" />
-                      {log.resource_id?.split('-')[0] || 'N/A'}
+                      <span title={log.resource_id}>{log.resource_id?.split('-')[0] || 'N/A'}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-500">
@@ -126,7 +211,7 @@ export default function AuditLogsPage() {
                       {expandedLog === log.id ? 'Yopish' : 'JSON ko\'rish'}
                     </button>
                     {expandedLog === log.id && (
-                      <pre className="mt-2 p-3 bg-slate-900 text-slate-300 rounded-lg text-[10px] overflow-auto max-w-xs">
+                      <pre className="mt-2 p-3 bg-slate-900 text-slate-300 rounded-lg text-[10px] overflow-auto max-w-xs scrollbar-hide">
                         {JSON.stringify(log.details, null, 2)}
                       </pre>
                     )}
@@ -144,7 +229,33 @@ export default function AuditLogsPage() {
             <p className="text-slate-500 font-medium">Hech qanday ma'lumot topilmadi.</p>
           </div>
         )}
+
+        {/* Pagination */}
+        {!isLoading && pagination && pagination.totalPages > 1 && (
+          <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+            <div className="text-sm text-slate-500">
+              Jami: <b>{pagination.total}</b> tadan {((filters.page - 1) * filters.limit) + 1}-{Math.min(filters.page * filters.limit, pagination.total)} ko'rsatilmoqda
+            </div>
+            <div className="flex space-x-2">
+              <button
+                disabled={filters.page === 1}
+                onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
+                className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 transition-all text-sm font-medium"
+              >
+                Oldingi
+              </button>
+              <button
+                disabled={filters.page === pagination.totalPages}
+                onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
+                className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 transition-all text-sm font-medium"
+              >
+                Keyingi
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
+}
 }

@@ -93,6 +93,12 @@ export default function CarsPage() {
                   <td colSpan={6} className="px-6 py-4 h-20 bg-slate-50/50"></td>
                 </tr>
               ))
+            ) : carsQuery.data?.cars.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                  Hech qanday avtomobil topilmadi.
+                </td>
+              </tr>
             ) : carsQuery.data?.cars.map((car: Car) => (
               <tr 
                 key={car.id} 

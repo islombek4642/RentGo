@@ -7,7 +7,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { usePermission } from '@/hooks/usePermission';
 import { PERMISSIONS, ROLES } from '@/constants';
 import { User } from '../types';
-import { Search, Filter, CheckCircle, Trash2, XCircle } from 'lucide-react';
+import { Search, Filter, CheckCircle, Trash2, XCircle, UserMinus, UserPlus, Shield } from 'lucide-react';
 
 export default function UsersPage() {
   const [filters, setFilters] = useState({
@@ -18,11 +18,13 @@ export default function UsersPage() {
     search: '',
   });
 
-  const { usersQuery, verifyMutation, deleteMutation } = useUsers(filters);
+  const { usersQuery, verifyMutation, deleteMutation, roleMutation, deactivateMutation } = useUsers(filters);
   const { hasPermission } = usePermission();
 
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmVerify, setConfirmVerify] = useState<{ id: string; status: boolean } | null>(null);
+  const [confirmRole, setConfirmRole] = useState<{ id: string; role: string; name: string } | null>(null);
+  const [confirmDeactivate, setConfirmDeactivate] = useState<{ id: string; status: boolean; name: string } | null>(null);
 
   const handleVerify = async () => {
     if (confirmVerify) {
@@ -38,6 +40,20 @@ export default function UsersPage() {
     if (confirmDelete) {
       await deleteMutation.mutateAsync(confirmDelete);
       setConfirmDelete(null);
+    }
+  };
+
+  const handleRoleUpdate = async () => {
+    if (confirmRole) {
+      await roleMutation.mutateAsync({ id: confirmRole.id, role: confirmRole.role });
+      setConfirmRole(null);
+    }
+  };
+
+  const handleDeactivate = async () => {
+    if (confirmDeactivate) {
+      await deactivateMutation.mutateAsync({ id: confirmDeactivate.id, is_active: confirmDeactivate.status });
+      setConfirmDeactivate(null);
     }
   };
 
@@ -91,70 +107,107 @@ export default function UsersPage() {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">Foydalanuvchi</th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">Rol</th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">Status</th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">Ro'yxatdan o'tgan</th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600 text-right">Amallar</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {usersQuery.isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="animate-pulse">
-                  <td colSpan={5} className="px-6 py-4 h-16 bg-slate-50/50"></td>
-                </tr>
-              ))
-            ) : usersQuery.data?.users.map((user: User) => (
-              <tr key={user.id} className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="font-medium text-slate-900">{user.name}</div>
-                  <div className="text-sm text-slate-500">{user.phone}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <Badge variant={user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN ? 'danger' : 'info'}>
-                    {user.role.toUpperCase()}
-                  </Badge>
-                </td>
-                <td className="px-6 py-4">
-                  {user.is_verified ? (
-                    <Badge variant="success">Tasdiqlangan</Badge>
-                  ) : (
-                    <Badge variant="warning">Kutilmoqda</Badge>
-                  )}
-                </td>
-                <td className="px-6 py-4 text-slate-500 text-sm">
-                  {new Date(user.created_at).toLocaleDateString('uz-UZ')}
-                </td>
-                <td className="px-6 py-4 text-right space-x-2">
-                  {hasPermission(PERMISSIONS.USER_VERIFY) && (
-                    <button
-                      onClick={() => setConfirmVerify({ id: user.id, status: !user.is_verified })}
-                      className={`p-2 rounded-lg transition-colors ${
-                        user.is_verified ? 'text-amber-500 hover:bg-amber-50' : 'text-green-500 hover:bg-green-50'
-                      }`}
-                      title={user.is_verified ? "Tasdiqni bekor qilish" : "Tasdiqlash"}
-                    >
-                      {user.is_verified ? <XCircle size={20} /> : <CheckCircle size={20} />}
-                    </button>
-                  )}
-                  {hasPermission(PERMISSIONS.USER_DELETE) && (
-                    <button
-                      onClick={() => setConfirmDelete(user.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      title="O'chirish"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  )}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100">
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Foydalanuvchi</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Rol va Boshqaruv</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Status</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Ro'yxatdan o'tgan</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600 text-right">Amallar</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {usersQuery.isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td colSpan={5} className="px-6 py-4 h-20 bg-slate-50/50"></td>
+                  </tr>
+                ))
+              ) : usersQuery.data?.users.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                    Hech qanday foydalanuvchi topilmadi.
+                  </td>
+                </tr>
+              ) : usersQuery.data?.users.map((user: User) => (
+                <tr key={user.id} className={`hover:bg-slate-50 transition-colors ${!user.is_active ? 'bg-slate-50/50 opacity-75' : ''}`}>
+                  <td className="px-6 py-4">
+                    <div className="font-medium text-slate-900">{user.name}</div>
+                    <div className="text-sm text-slate-500">{user.phone}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col space-y-1">
+                      <Badge variant={user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN ? 'danger' : 'info'}>
+                        {user.role.toUpperCase()}
+                      </Badge>
+                      {hasPermission(PERMISSIONS.USER_MANAGE_ROLES) && user.role !== ROLES.SUPER_ADMIN && (
+                        <select
+                          className="text-[10px] bg-transparent border-none text-indigo-600 font-bold focus:ring-0 cursor-pointer p-0 w-fit"
+                          value={user.role}
+                          onChange={(e) => setConfirmRole({ id: user.id, role: e.target.value, name: user.name })}
+                        >
+                          {Object.values(ROLES).filter(r => r !== ROLES.SUPER_ADMIN).map(r => (
+                            <option key={r} value={r}>Rolni o'zgartirish: {r.toUpperCase()}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col space-y-1">
+                      {user.is_verified ? (
+                        <Badge variant="success">Tasdiqlangan</Badge>
+                      ) : (
+                        <Badge variant="warning">Kutilmoqda</Badge>
+                      )}
+                      {!user.is_active && (
+                        <Badge variant="neutral">Bloklangan</Badge>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-slate-500 text-sm">
+                    {new Date(user.created_at).toLocaleDateString('uz-UZ')}
+                  </td>
+                  <td className="px-6 py-4 text-right space-x-1">
+                    {hasPermission(PERMISSIONS.USER_VERIFY) && (
+                      <button
+                        onClick={() => setConfirmVerify({ id: user.id, status: !user.is_verified })}
+                        className={`p-2 rounded-lg transition-colors ${
+                          user.is_verified ? 'text-amber-500 hover:bg-amber-50' : 'text-green-500 hover:bg-green-50'
+                        }`}
+                        title={user.is_verified ? "Tasdiqni bekor qilish" : "Tasdiqlash"}
+                      >
+                        {user.is_verified ? <XCircle size={18} /> : <CheckCircle size={18} />}
+                      </button>
+                    )}
+                    {hasPermission(PERMISSIONS.USER_MANAGE_ROLES) && user.role !== ROLES.SUPER_ADMIN && (
+                      <button
+                        onClick={() => setConfirmDeactivate({ id: user.id, status: !user.is_active, name: user.name })}
+                        className={`p-2 rounded-lg transition-colors ${
+                          user.is_active ? 'text-red-500 hover:bg-red-50' : 'text-blue-500 hover:bg-blue-50'
+                        }`}
+                        title={user.is_active ? "Bloklash" : "Faollashtirish"}
+                      >
+                        {user.is_active ? <UserMinus size={18} /> : <UserPlus size={18} />}
+                      </button>
+                    )}
+                    {hasPermission(PERMISSIONS.USER_DELETE) && user.role !== ROLES.SUPER_ADMIN && (
+                      <button
+                        onClick={() => setConfirmDelete(user.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="O'chirish"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
         {!usersQuery.isLoading && (
@@ -204,6 +257,27 @@ export default function UsersPage() {
           : "Ushbu foydalanuvchining tasdiqlanganlik holatini bekor qilmoqchimisiz?"}
         confirmText="Tasdiqlash"
         isLoading={verifyMutation.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmRole}
+        onClose={() => setConfirmRole(null)}
+        onConfirm={handleRoleUpdate}
+        title="Rolni o'zgartirish"
+        message={`${confirmRole?.name} ismli foydalanuvchining rolini "${confirmRole?.role.toUpperCase()}" ga o'zgartirmoqchimisiz?`}
+        confirmText="O'zgartirish"
+        isLoading={roleMutation.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmDeactivate}
+        onClose={() => setConfirmDeactivate(null)}
+        onConfirm={handleDeactivate}
+        title={confirmDeactivate?.status ? "Foydalanuvchini faollashtirish" : "Foydalanuvchini bloklash"}
+        message={`Haqiqatan ham ${confirmDeactivate?.name} ismli foydalanuvchini ${confirmDeactivate?.status ? 'faollashtirmoqchimisiz' : 'bloklamoqchimisiz'}?`}
+        variant={confirmDeactivate?.status ? 'info' : 'danger'}
+        confirmText={confirmDeactivate?.status ? 'Faollashtirish' : 'Bloklash'}
+        isLoading={deactivateMutation.isPending}
       />
     </div>
   );

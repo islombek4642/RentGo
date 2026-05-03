@@ -55,6 +55,10 @@ class AdminService {
     await adminRepository.deleteReview(reviewId);
   }
 
+  async getAllReviews(filters) {
+    return await adminRepository.findAllReviews(filters);
+  }
+
   async getAllBookings(filters) {
     return await adminRepository.findAllBookings(filters);
   }
@@ -100,6 +104,10 @@ class AdminService {
 
     const updatedUser = await userRepository.update(userId, { is_active: isActive });
     return updatedUser;
+  }
+
+  async getAnalytics() {
+    return await adminRepository.getAnalytics();
   }
 }
 

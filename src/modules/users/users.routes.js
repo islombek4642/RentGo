@@ -2,10 +2,13 @@ import express from 'express';
 import userController from './users.controller.js';
 import { protect } from '../../middleware/auth.middleware.js';
 import { upload } from '../../middleware/upload.middleware.js';
+import { passwordChangeLimiter } from '../../middleware/security.middleware.js';
 
 const router = express.Router();
 
 router.use(protect); // All routes in this module are protected
+
+router.patch('/change-password', passwordChangeLimiter, userController.changePassword);
 
 /**
  * @swagger

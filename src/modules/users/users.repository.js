@@ -54,6 +54,21 @@ class UserRepository {
     return result.rows[0];
   }
 
+  async findByIdWithPassword(id) {
+    const result = await pool.query(
+      'SELECT * FROM users WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    );
+    return result.rows[0];
+  }
+
+  async updatePassword(id, hashedPassword) {
+    await pool.query(
+      'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP, token_version = token_version + 1 WHERE id = $2',
+      [hashedPassword, id]
+    );
+  }
+
   async delete(id) {
     await pool.query(
       'UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1',

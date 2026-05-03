@@ -94,6 +94,12 @@ export default function BookingsPage() {
                   <td colSpan={6} className="px-6 py-4 h-20 bg-slate-50/50"></td>
                 </tr>
               ))
+            ) : bookingsQuery.data?.bookings.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                  Hech qanday buyurtma topilmadi.
+                </td>
+              </tr>
             ) : bookingsQuery.data?.bookings.map((booking: Booking) => (
               <tr key={booking.id} className="hover:bg-slate-50 transition-colors">
                 <td className="px-6 py-4">
@@ -135,13 +141,22 @@ export default function BookingsPage() {
                   {hasPermission(PERMISSIONS.BOOKING_MANAGE) && (
                     <>
                       {booking.status === BOOKING_STATUS.PENDING && (
-                        <button
-                          onClick={() => setConfirmStatus({ id: booking.id, status: BOOKING_STATUS.REJECTED })}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Rad etish"
-                        >
-                          <XCircle size={18} />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => setConfirmStatus({ id: booking.id, status: BOOKING_STATUS.CONFIRMED })}
+                            className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Tasdiqlash"
+                          >
+                            <CheckCircle size={18} />
+                          </button>
+                          <button
+                            onClick={() => setConfirmStatus({ id: booking.id, status: BOOKING_STATUS.REJECTED })}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Rad etish"
+                          >
+                            <XCircle size={18} />
+                          </button>
+                        </>
                       )}
                       {(booking.status === BOOKING_STATUS.CONFIRMED || booking.status === BOOKING_STATUS.IN_PROGRESS) && (
                         <button

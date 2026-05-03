@@ -18,6 +18,7 @@ router.use(protect);
 
 // Dashboard
 router.get('/dashboard', hasPermission(PERMISSIONS.DASHBOARD_VIEW), adminController.getDashboard);
+router.get('/dashboard/analytics', hasPermission(PERMISSIONS.DASHBOARD_VIEW), adminController.getAnalytics);
 
 // User Management
 router.get('/users', hasPermission(PERMISSIONS.USER_VIEW), adminController.getAllUsers);
@@ -36,6 +37,7 @@ router.get('/bookings', hasPermission(PERMISSIONS.BOOKING_VIEW_ALL), adminContro
 router.patch('/bookings/:id/status', hasPermission(PERMISSIONS.BOOKING_MANAGE), adminController.updateBookingStatus);
 
 // Review Moderation
+router.get('/reviews', hasPermission(PERMISSIONS.REVIEW_DELETE), adminController.getAllReviews);
 router.delete('/reviews/:id', hasPermission(PERMISSIONS.REVIEW_DELETE), adminController.deleteReview);
 
 // Audit Logs

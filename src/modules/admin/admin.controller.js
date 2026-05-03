@@ -132,16 +132,43 @@ class AdminController {
     }
   }
 
+  async getAllReviews(req, res, next) {
+    try {
+      const { page = 1, limit = 10 } = req.query;
+      const result = await adminService.getAllReviews({ 
+        page: parseInt(page), 
+        limit: parseInt(limit) 
+      });
+      res.status(HTTP_STATUS.OK).json({ status: 'success', ...result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getAuditLogs(req, res, next) {
     try {
-      const { page = 1, limit = 20, user_id, action } = req.query;
-      const logs = await auditService.getLogs({
+      const { 
+        page = 1, 
+        limit = 20, 
+        user_id, 
+        action, 
+        resource_id, 
+        ip_address, 
+        date_from, 
+        date_to 
+      } = req.query;
+      
+      const result = await auditService.getLogs({
         page: parseInt(page),
         limit: parseInt(limit),
         user_id,
-        action
+        action,
+        resource_id,
+        ip_address,
+        date_from,
+        date_to
       });
-      res.status(HTTP_STATUS.OK).json({ status: 'success', data: { logs } });
+      res.status(HTTP_STATUS.OK).json({ status: 'success', data: result });
     } catch (error) {
       next(error);
     }
@@ -154,6 +181,15 @@ class AdminController {
       const user = await adminService.deactivateUser(id, is_active, req.user.id);
       await auditService.log(req, is_active ? 'USER_ACTIVATE' : 'USER_DEACTIVATE', 'users', id);
       res.status(HTTP_STATUS.OK).json({ status: 'success', data: { user } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getAnalytics(req, res, next) {
+    try {
+      const analytics = await adminService.getAnalytics();
+      res.status(HTTP_STATUS.OK).json({ status: 'success', data: analytics });
     } catch (error) {
       next(error);
     }

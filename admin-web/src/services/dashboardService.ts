@@ -5,4 +5,8 @@ export const dashboardService = {
     const response = await api.get('/admin/dashboard');
     return response.data.data.stats;
   },
+  getAnalytics: async () => {
+    const response = await api.get('/admin/dashboard/analytics');
+    return response.data.data;
+  },
 };

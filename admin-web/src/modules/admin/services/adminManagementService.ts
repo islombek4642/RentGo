@@ -4,14 +4,9 @@ import { Role } from '@/constants';
 
 export const adminManagementService = {
   getAdmins: async (): Promise<AdminsResponse> => {
-    // Fetch all staff roles
-    const response = await api.get('/admin/users');
-    // Filter staff roles on frontend for now or refine backend query
-    const allUsers = response.data.users as any[];
-    const admins = allUsers.filter(u => 
-      ['admin', 'super_admin', 'moderator', 'support'].includes(u.role)
-    );
-    return { status: 'success', users: admins };
+    const roles = ['admin', 'super_admin', 'moderator', 'support'].join(',');
+    const response = await api.get('/admin/users', { params: { role: roles, limit: 100 } });
+    return { status: 'success', users: response.data.users };
   },
 
   updateRole: async (id: string, role: Role) => {

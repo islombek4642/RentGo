@@ -23,4 +23,14 @@ export const usersService = {
     const response = await api.delete(`/admin/users/${id}`);
     return response.data;
   },
+  
+  updateRole: async (id: string, role: string) => {
+    const response = await api.patch(`/admin/users/${id}/role`, { role });
+    return response.data;
+  },
+
+  deactivateUser: async (id: string, is_active: boolean) => {
+    const response = await api.patch(`/admin/users/${id}/deactivate`, { is_active });
+    return response.data;
+  },
 };
