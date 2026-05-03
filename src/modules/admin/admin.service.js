@@ -69,7 +69,13 @@ class AdminService {
     return booking;
   }
 
-  async updateUserRole(userId, role, currentUserId) {
+    const currentUser = await userRepository.findById(currentUserId);
+    
+    // Only super_admin can promote someone to super_admin
+    if (role === 'super_admin' && currentUser?.role !== 'super_admin') {
+      throw new AppError('Faqat Super Admin boshqa foydalanuvchiga Super Admin rolini bera oladi!', HTTP_STATUS.FORBIDDEN);
+    }
+
     if (userId === currentUserId) {
       throw new AppError('O\'z rolingizni o\'zgartira olmaysiz!', HTTP_STATUS.BAD_REQUEST);
     }
