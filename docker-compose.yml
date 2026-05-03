@@ -29,24 +29,14 @@ services:
       dockerfile: Dockerfile
     container_name: rentgo-backend
     restart: always
+    env_file:
+      - .env.production
     environment:
       NODE_ENV: production
       PORT: 3000
       DB_HOST: db
       DB_PORT: 5432
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-root}
-      DB_NAME: ${DB_NAME:-rentgo}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
-      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
-      CLIENT_URL: ${CLIENT_URL:-http://localhost:3001}
-      AUTO_DB_INIT: ${AUTO_DB_INIT:-true}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
       UPLOAD_PATH: uploads/
-      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-admin123}
-      SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-user123}
     volumes:
       - uploads:/app/uploads
       - logs:/app/logs
