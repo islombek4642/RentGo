@@ -147,6 +147,8 @@ fi
 echo -e "🔗 ${YELLOW}Admin Panel:${NC} ${BASE_URL}/"
 echo -e "🔗 ${YELLOW}API Documentation:${NC} ${BASE_URL}/api-docs"
 echo -e "🔗 ${YELLOW}Backend API (Healthcheck):${NC} ${BASE_URL}/api/v1/health"
+echo -e "📱 ${YELLOW}Mobile API URL:${NC} http://${PUBLIC_IP}:3000/api/v1"
+echo -e "   ${CYAN}(Ushbu manzilni mobile/src/constants/config.ts fayliga yozing)${NC}"
 echo ""
 
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
