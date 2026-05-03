@@ -46,7 +46,7 @@ export default function DashboardCharts() {
               />
               <YAxis tick={{ fontSize: 10 }} tickFormatter={(val) => `${val / 1000}k`} />
               <Tooltip 
-                formatter={(val: number) => [`${val.toLocaleString()} UZS`, 'Daromad']}
+                formatter={(val: any) => [`${Number(val).toLocaleString()} UZS`, 'Daromad']}
                 labelFormatter={(label) => new Date(label).toLocaleDateString('uz-UZ')}
               />
               <Line type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
@@ -75,7 +75,7 @@ export default function DashboardCharts() {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(val: number) => [val, 'Soni']} />
+              <Tooltip formatter={(val: any) => [val, 'Soni']} />
               <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 20 }} />
             </PieChart>
           </ResponsiveContainer>
