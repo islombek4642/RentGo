@@ -254,6 +254,6 @@ export default function AuditLogsPage() {
           </div>
         )}
       </div>
-    </div>
-  );
+    );
 }
+

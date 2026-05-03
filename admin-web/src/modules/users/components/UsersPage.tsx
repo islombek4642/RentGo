@@ -232,7 +232,6 @@ export default function UsersPage() {
             </div>
           </div>
         )}
-      </div>
 
       {/* Modals */}
       <ConfirmModal
@@ -281,3 +280,4 @@ export default function UsersPage() {
     </div>
   );
 }
+

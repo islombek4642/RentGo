@@ -135,7 +135,6 @@ export default function ReviewsPage() {
             </div>
           </div>
         )}
-      </div>
 
       <ConfirmModal
         isOpen={!!confirmDelete}

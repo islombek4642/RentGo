@@ -191,7 +191,6 @@ export default function CarsPage() {
             </div>
           </div>
         )}
-      </div>
 
       {/* Modals */}
       <CarDetailModal

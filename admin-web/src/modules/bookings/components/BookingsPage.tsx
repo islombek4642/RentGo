@@ -208,7 +208,6 @@ export default function BookingsPage() {
             </div>
           </div>
         )}
-      </div>
 
       <BookingDetailModal
         booking={selectedBooking}
