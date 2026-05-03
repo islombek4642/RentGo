@@ -6,6 +6,7 @@ export interface User {
   phone: string;
   role: Role;
   is_verified: boolean;
+  is_active: boolean;
   license_image_url?: string;
   created_at: string;
 }
