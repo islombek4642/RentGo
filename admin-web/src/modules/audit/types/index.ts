@@ -14,6 +14,12 @@ export interface AuditLogsResponse {
   status: string;
   data: {
     logs: AuditLog[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
   };
 }
 
@@ -22,4 +28,8 @@ export interface AuditLogsFilters {
   limit?: number;
   user_id?: string;
   action?: string;
+  resource_id?: string;
+  ip_address?: string;
+  date_from?: string;
+  date_to?: string;
 }
