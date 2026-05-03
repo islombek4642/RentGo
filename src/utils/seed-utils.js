@@ -11,6 +11,16 @@ export const runSeedData = async (pool) => {
   logger.info('Running idempotent database seeding...');
 
   try {
+    // 0) Fix database constraint if needed (ensure super_admin role is allowed)
+    await pool.query(`
+      ALTER TABLE users 
+      DROP CONSTRAINT IF EXISTS users_role_check;
+      
+      ALTER TABLE users 
+      ADD CONSTRAINT users_role_check 
+      CHECK (role IN ('user', 'owner', 'support', 'moderator', 'admin', 'super_admin'));
+    `);
+
     // 1) Ensure Super Admin exists
     const superAdminExists = await pool.query('SELECT id FROM users WHERE role = $1 AND deleted_at IS NULL', [ROLES.SUPER_ADMIN]);
     
