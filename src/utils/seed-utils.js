@@ -53,12 +53,15 @@ export const runSeedData = async (pool) => {
       );
     }
 
-    // Get an admin ID for car ownership (fallback if creation skipped)
-    const adminCheck = await pool.query('SELECT id FROM users WHERE role = $1 LIMIT 1', [ROLES.ADMIN]);
+    // Get an admin ID for car ownership (can be SUPER_ADMIN or ADMIN)
+    const adminCheck = await pool.query(
+      'SELECT id FROM users WHERE role IN ($1, $2) AND deleted_at IS NULL LIMIT 1', 
+      [ROLES.SUPER_ADMIN, ROLES.ADMIN]
+    );
     const adminId = adminCheck.rows[0]?.id;
 
     if (!adminId) {
-       throw new Error('Could not find or create an admin user for car assignment.');
+       throw new Error('Could not find or create an administrative user for car assignment.');
     }
 
     // 3) Create Sample Cars if none exist
