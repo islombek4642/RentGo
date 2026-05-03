@@ -5,6 +5,12 @@ import { dashboardService } from '@/services/dashboardService';
 import { Users, Car, Calendar, DollarSign } from 'lucide-react';
 
 import DashboardCharts from './components/DashboardCharts';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 const STATS_MAP = [
   { key: 'totalUsers', label: 'Jami foydalanuvchilar', icon: Users, color: 'bg-blue-500' },
@@ -32,21 +38,35 @@ export default function DashboardPage() {
   if (error) return <div className="p-8 text-red-500 text-center font-medium">Statistikalarni yuklashda xatolik yuz berdi.</div>;
 
   return (
-    <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-slate-500">Platformaning umumiy holati haqida qisqacha ma'lumot.</p>
+    <div className="p-8 space-y-8 animate-fade-in">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
+          <p className="text-slate-500 mt-1">Platformaning umumiy holati va asosiy ko'rsatkichlari.</p>
+        </div>
+        <div className="text-sm font-medium text-slate-400 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
+          {new Date().toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' })}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {STATS_MAP.map((item) => (
-          <div key={item.key} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-4">
-            <div className={`${item.color} p-3 rounded-xl text-white`}>
-              <item.icon size={24} />
+          <div key={item.key} className="premium-card group flex flex-col justify-between h-32">
+            <div className="flex justify-between items-start">
+              <div className={cn(
+                "p-2.5 rounded-xl text-white shadow-lg",
+                item.color,
+                `shadow-${item.color.split('-')[1]}-200`
+              )}>
+                <item.icon size={20} />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 group-hover:bg-indigo-400" />
+              </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">{item.label}</p>
-              <h3 className="text-2xl font-bold text-slate-900">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{item.label}</p>
+              <h3 className="text-2xl font-bold text-slate-900 mt-0.5">
                 {item.isCurrency ? `${(stats?.[item.key] || 0).toLocaleString()} UZS` : stats?.[item.key] || 0}
               </h3>
             </div>

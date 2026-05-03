@@ -41,14 +41,16 @@ export default function ReviewsPage() {
   };
 
   return (
-    <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Sharhlar moderatsiyasi</h1>
-        <p className="text-slate-500">Foydalanuvchilar tomonidan qoldirilgan sharhlarni boshqarish.</p>
+    <div className="p-8 space-y-8 animate-fade-in">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Sharhlar moderatsiyasi</h1>
+          <p className="text-slate-500 mt-1">Foydalanuvchilar tomonidan qoldirilgan sharhlarni boshqarish.</p>
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="table-container">
+          <table>
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
               <th className="px-6 py-4 text-sm font-semibold text-slate-600">Foydalanuvchi</th>
@@ -107,6 +109,7 @@ export default function ReviewsPage() {
             ))}
           </tbody>
         </table>
+      </div>
 
         {/* Pagination */}
         {!reviewsQuery.isLoading && (reviewsQuery.data?.pagination.total || 0) > 0 && (

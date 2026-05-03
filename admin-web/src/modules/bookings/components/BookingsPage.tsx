@@ -41,16 +41,16 @@ export default function BookingsPage() {
   };
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="p-8 space-y-8 animate-fade-in">
+      <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Buyurtmalar monitoringi</h1>
-          <p className="text-slate-500">Barcha ijaralarni kuzatish va operatsion boshqaruv.</p>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Buyurtmalar monitoringi</h1>
+          <p className="text-slate-500 mt-1">Barcha ijaralarni kuzatish va operatsion boshqaruv.</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-wrap gap-4 items-center">
+      <div className="premium-card flex flex-wrap gap-4 items-center">
         <div className="relative flex-1 min-w-[300px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input
@@ -74,9 +74,8 @@ export default function BookingsPage() {
         </select>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="table-container">
+          <table>
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
               <th className="px-6 py-4 text-sm font-semibold text-slate-600">Buyurtma</th>
@@ -183,6 +182,7 @@ export default function BookingsPage() {
             ))}
           </tbody>
         </table>
+      </div>
 
         {/* Pagination */}
         {!bookingsQuery.isLoading && (

@@ -58,16 +58,16 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="p-8 space-y-8 animate-fade-in">
+      <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Foydalanuvchilar</h1>
-          <p className="text-slate-500">Platforma foydalanuvchilarini boshqarish va moderatsiya qilish.</p>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Foydalanuvchilar</h1>
+          <p className="text-slate-500 mt-1">Platforma foydalanuvchilarini boshqarish va moderatsiya qilish.</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-wrap gap-4 items-center">
+      <div className="premium-card flex flex-wrap gap-4 items-center">
         <div className="relative flex-1 min-w-[300px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input
@@ -106,9 +106,8 @@ export default function UsersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      <div className="table-container">
+          <table>
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100">
                 <th className="px-6 py-4 text-sm font-semibold text-slate-600">Foydalanuvchi</th>
@@ -207,7 +206,7 @@ export default function UsersPage() {
               ))}
             </tbody>
           </table>
-        </div>
+      </div>
 
         {/* Pagination */}
         {!usersQuery.isLoading && (
