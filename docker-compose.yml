@@ -84,3 +84,11 @@ networks:
     driver: bridge
   proxy_network:
     external: true
+
+volumes:
+  pgdata:
+    driver: local
+  uploads:
+    driver: local
+  logs:
+    driver: local
