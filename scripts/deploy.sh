@@ -71,18 +71,21 @@ echo -e "${GREEN}  ✅ Tizim muvaffaqiyatli ishga tushdi!${NC}"
 echo -e "${GREEN}============================================${NC}"
 
 # Avtomatik linklarni aniqlash va chiqarish
+PUBLIC_IP=$(curl -s -4 ifconfig.me || echo "SIZNING_IP_MANZILINGIZ")
+
 if [ -z "$DOMAIN" ] || [ "$DOMAIN" == "localhost" ]; then
-    echo -e "🔗 ${YELLOW}Admin Panel:${NC} https://admin.rentgo.uz/"
-    echo -e "🔗 ${YELLOW}API Documentation:${NC} https://api.rentgo.uz/api-docs"
-    echo -e "🔗 ${YELLOW}Backend API (Healthcheck):${NC} https://api.rentgo.uz/api/v1/health"
-    echo -e "📱 ${YELLOW}Mobile API URL:${NC} https://api.rentgo.uz/api/v1"
+    echo -e "🔗 ${YELLOW}Admin Panel:${NC} http://${PUBLIC_IP}:8080/"
+    echo -e "🔗 ${YELLOW}API Documentation:${NC} http://${PUBLIC_IP}:8080/api-docs"
+    echo -e "🔗 ${YELLOW}Backend API (Healthcheck):${NC} http://${PUBLIC_IP}:8080/api/v1/health"
+    echo -e "📱 ${YELLOW}Mobile API URL:${NC} http://${PUBLIC_IP}:3000/api/v1"
+    echo -e "   ${CYAN}(Domen yo'q - IP orqali kirilmoqda)${NC}"
 else
     echo -e "🔗 ${YELLOW}Admin Panel:${NC} https://admin.${DOMAIN}/"
     echo -e "🔗 ${YELLOW}API Documentation:${NC} https://api.${DOMAIN}/api-docs"
     echo -e "🔗 ${YELLOW}Backend API (Healthcheck):${NC} https://api.${DOMAIN}/api/v1/health"
     echo -e "📱 ${YELLOW}Mobile API URL:${NC} https://api.${DOMAIN}/api/v1"
+    echo -e "   ${CYAN}(SSL nginx-proxy tomonidan avtomatik sozlandi)${NC}"
 fi
-echo -e "   ${CYAN}(SSL nginx-proxy tomonidan avtomatik sozlandi)${NC}"
 echo ""
 
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
