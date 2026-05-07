@@ -39,6 +39,7 @@ services:
       UPLOAD_PATH: uploads/
       VIRTUAL_HOST: api.rentgo.uz
       LETSENCRYPT_HOST: api.rentgo.uz
+      VIRTUAL_PORT: 3000
     expose:
       - "3000"
     volumes:
@@ -69,6 +70,7 @@ services:
       NODE_ENV: production
       VIRTUAL_HOST: admin.rentgo.uz
       LETSENCRYPT_HOST: admin.rentgo.uz
+      VIRTUAL_PORT: 3000
     expose:
       - "3000"
     depends_on:
