@@ -70,6 +70,7 @@ services:
     restart: always
     environment:
       NODE_ENV: production
+      HOSTNAME: 0.0.0.0
       VIRTUAL_HOST: admin.rentgo.uz
       LETSENCRYPT_HOST: admin.rentgo.uz
       VIRTUAL_PORT: 3000
