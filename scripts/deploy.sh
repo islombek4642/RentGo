@@ -75,9 +75,9 @@ PUBLIC_IP=$(curl -s -4 ifconfig.me || echo "SIZNING_IP_MANZILINGIZ")
 
 if [ -z "$DOMAIN" ] || [ "$DOMAIN" == "localhost" ]; then
     echo -e "🔗 ${YELLOW}Admin Panel:${NC} http://${PUBLIC_IP}:8080/"
-    echo -e "🔗 ${YELLOW}API Documentation:${NC} http://${PUBLIC_IP}:8080/api-docs"
-    echo -e "🔗 ${YELLOW}Backend API (Healthcheck):${NC} http://${PUBLIC_IP}:8080/api/v1/health"
-    echo -e "📱 ${YELLOW}Mobile API URL:${NC} http://${PUBLIC_IP}:3000/api/v1"
+    echo -e "🔗 ${YELLOW}API Documentation:${NC} http://${PUBLIC_IP}:8081/api-docs"
+    echo -e "🔗 ${YELLOW}Backend API (Healthcheck):${NC} http://${PUBLIC_IP}:8081/api/v1/health"
+    echo -e "📱 ${YELLOW}Mobile API URL:${NC} http://${PUBLIC_IP}:8081/api/v1"
     echo -e "   ${CYAN}(Domen yo'q - IP orqali kirilmoqda)${NC}"
 else
     echo -e "🔗 ${YELLOW}Admin Panel:${NC} https://admin.${DOMAIN}/"

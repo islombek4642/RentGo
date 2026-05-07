@@ -42,6 +42,8 @@ services:
       VIRTUAL_PORT: 3000
     expose:
       - "3000"
+    ports:
+      - "8081:3000"
     volumes:
       - uploads:/app/uploads
       - logs:/app/logs
@@ -73,6 +75,8 @@ services:
       VIRTUAL_PORT: 3000
     expose:
       - "3000"
+    ports:
+      - "8080:3000"
     depends_on:
       - backend
     networks:
